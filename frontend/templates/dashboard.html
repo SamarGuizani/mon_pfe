@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Dashboard - SIM Box Fraud Detection{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- STATS CARDS -->
+<section class="stats-grid">
+    <div class="card stat-card">
+        <div class="stat-icon">&#128222;</div>
+        <div class="stat-value" id="total-msisdn">--</div>
+        <div class="stat-label">MSISDN Analyses</div>
+    </div>
+    <div class="card stat-card alert">
+        <div class="stat-icon">&#9888;</div>
+        <div class="stat-value" id="total-suspects">--</div>
+        <div class="stat-label">Suspects Detectes</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-icon">&#128200;</div>
+        <div class="stat-value" id="taux-fraude">--</div>
+        <div class="stat-label">Taux de Fraude</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-icon">&#128205;</div>
+        <div class="stat-value" id="avg-locations">--</div>
+        <div class="stat-label">Locations Moyennes</div>
+    </div>
+</section>
+
+<!-- CHARTS -->
+<section class="charts-grid">
+    <div class="card chart-card">
+        <h3>Top 10 Suspects - Nombre d'appels</h3>
+        <canvas id="chart-top-suspects"></canvas>
+    </div>
+    <div class="card chart-card">
+        <h3>Distribution des appels par MSISDN</h3>
+        <canvas id="chart-distribution"></canvas>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    loadStats();
+    loadTopSuspects();
+    loadDistribution();
+});
+
+async function loadStats() {
+    const res = await fetch("/api/stats");
+    const data = await res.json();
+    document.getElementById("total-msisdn").textContent = fmt(data.total_msisdn);
+    document.getElementById("total-suspects").textContent = fmt(data.total_suspects);
+    document.getElementById("taux-fraude").textContent = data.taux_fraude + "%";
+    document.getElementById("avg-locations").textContent = Math.round(data.avg_locations);
+}
+
+async function loadTopSuspects() {
+    const res = await fetch("/api/top_suspects");
+    const data = await res.json();
+    new Chart(document.getElementById("chart-top-suspects"), {
+        type: "bar",
+        data: {
+            labels: data.map(d => d.msisdn),
+            datasets: [{
+                label: "Nombre d'appels",
+                data: data.map(d => d.appels),
+                backgroundColor: "rgba(0, 212, 255, 0.7)",
+                borderColor: "#00d4ff",
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: "#7a8fa6" }, grid: { color: "#1e2d3d" } },
+                x: { ticks: { color: "#7a8fa6" }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+async function loadDistribution() {
+    const res = await fetch("/api/distribution");
+    const data = await res.json();
+    new Chart(document.getElementById("chart-distribution"), {
+        type: "doughnut",
+        data: {
+            labels: data.map(d => d.tranche + " appels"),
+            datasets: [{
+                data: data.map(d => d.count),
+                backgroundColor: ["#00d4ff","#0099cc","#006699","#ffa502","#ff6348","#ff4757"],
+                borderColor: "#1a2332",
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: "right", labels: { color: "#e0e6ed" } } }
+        }
+    });
+}
+
+function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
+</script>
+{% endblock %}

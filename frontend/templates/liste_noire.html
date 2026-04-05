@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% set active = "liste_noire" %}
+{% block title %}Liste Noire - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h2>Liste Noire des Numeros Suspects</h2>
+    <p id="total-info">Chargement...</p>
+</section>
+
+<section class="table-section">
+    <div class="card">
+        <div class="table-header">
+            <div class="table-stats">
+                <span class="badge" id="badge-total">--</span> suspects au total
+            </div>
+            <input type="text" id="search-input" placeholder="Rechercher un MSISDN..."
+                   onkeyup="searchSuspects()">
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>MSISDN</th>
+                        <th>Appels</th>
+                        <th>Duree Totale (s)</th>
+                        <th>% Appels Courts</th>
+                        <th>IMEI Utilises</th>
+                        <th>Cellules</th>
+                        <th>Appels/Jour</th>
+                        <th>Date Detection</th>
+                    </tr>
+                </thead>
+                <tbody id="suspects-body">
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPage = 1;
+const perPage = 20;
+
+document.addEventListener("DOMContentLoaded", () => loadSuspects(1));
+
+async function loadSuspects(page) {
+    currentPage = page;
+    const search = document.getElementById("search-input").value;
+    const res = await fetch(`/api/suspects?page=${page}&per_page=${perPage}&search=${search}`);
+    const data = await res.json();
+
+    document.getElementById("badge-total").textContent = fmt(data.total);
+    document.getElementById("total-info").textContent =
+        `${fmt(data.total)} numeros suspects detectes par le modele XGBoost (F1 = 0.997)`;
+
+    const tbody = document.getElementById("suspects-body");
+    tbody.innerHTML = "";
+
+    data.suspects.forEach((s, i) => {
+        const rank = (page - 1) * perPage + i + 1;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="rank">${rank}</td>
+            <td><strong>${s.msisdn}</strong></td>
+            <td class="${s.nombre_appels > 1000 ? 'high-danger' : s.nombre_appels > 200 ? 'medium-danger' : ''}">${fmt(s.nombre_appels)}</td>
+            <td>${fmt(s.duree_totale)}</td>
+            <td class="${s.ratio_courts > 70 ? 'high-danger' : s.ratio_courts > 40 ? 'medium-danger' : ''}">${s.ratio_courts}%</td>
+            <td class="${s.nb_imei > 2 ? 'high-danger' : ''}">${s.nb_imei}</td>
+            <td>${s.nb_cellules}</td>
+            <td class="${s.appels_jour > 50 ? 'high-danger' : s.appels_jour > 20 ? 'medium-danger' : ''}">${s.appels_jour}</td>
+            <td>${s.date_detection.substring(0, 10)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    renderPagination(data.page, data.pages);
+}
+
+function renderPagination(current, total) {
+    const div = document.getElementById("pagination");
+    div.innerHTML = "";
+
+    if (current > 1) addBtn(div, "Precedent", () => loadSuspects(current - 1));
+
+    let start = Math.max(1, current - 3);
+    let end = Math.min(total, current + 3);
+
+    if (start > 1) { addBtn(div, "1", () => loadSuspects(1)); addDots(div); }
+
+    for (let i = start; i <= end; i++) {
+        const btn = addBtn(div, i, () => loadSuspects(i));
+        if (i === current) btn.className = "active";
+    }
+
+    if (end < total) { addDots(div); addBtn(div, total, () => loadSuspects(total)); }
+    if (current < total) addBtn(div, "Suivant", () => loadSuspects(current + 1));
+}
+
+function addBtn(parent, text, onclick) {
+    const btn = document.createElement("button");
+    btn.textContent = text;
+    btn.onclick = onclick;
+    parent.appendChild(btn);
+    return btn;
+}
+
+function addDots(parent) {
+    const span = document.createElement("span");
+    span.textContent = "...";
+    span.style.color = "#7a8fa6";
+    span.style.padding = "0 5px";
+    parent.appendChild(span);
+}
+
+let searchTimeout;
+function searchSuspects() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadSuspects(1), 400);
+}
+
+function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
+</script>
+{% endblock %}

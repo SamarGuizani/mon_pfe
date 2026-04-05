@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SIM Box Fraud Detection{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar">
+    <div class="nav-brand">SIM Box Fraud Detection</div>
+    <div class="nav-links">
+        <a href="/" class="nav-link {% if active == 'dashboard' %}active{% endif %}">Dashboard</a>
+        <a href="/graphiques" class="nav-link {% if active == 'graphiques' %}active{% endif %}">Graphiques</a>
+        <a href="/liste-noire" class="nav-link {% if active == 'liste_noire' %}active{% endif %}">Liste Noire</a>
+    </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<footer>
+    <p>PFE - Detection de Fraude SIM Box | 741M CDR | XGBoost F1=0.997 | Samar 2026</p>
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

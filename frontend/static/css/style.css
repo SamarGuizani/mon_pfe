@@ -1,0 +1,420 @@
+/* ============================================
+   SIM Box Fraud Detection - Dashboard Style
+   3 pages : Dashboard / Graphiques / Liste Noire
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0f1923;
+    color: #e0e6ed;
+    min-height: 100vh;
+}
+
+/* ============================================
+   NAVIGATION BAR
+   ============================================ */
+.navbar {
+    background: linear-gradient(135deg, #1a2332 0%, #0d253f 100%);
+    border-bottom: 2px solid #00d4ff;
+    padding: 0 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
+}
+
+.nav-brand {
+    font-size: 22px;
+    font-weight: 700;
+    color: #00d4ff;
+    padding: 18px 0;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 5px;
+}
+
+.nav-link {
+    color: #7a8fa6;
+    text-decoration: none;
+    padding: 18px 22px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.nav-link:hover {
+    color: #e0e6ed;
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.nav-link.active {
+    color: #00d4ff;
+    border-bottom-color: #00d4ff;
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+.page-header {
+    padding: 30px 40px 10px;
+}
+
+.page-header h2 {
+    color: #00d4ff;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.page-header p {
+    color: #7a8fa6;
+    font-size: 14px;
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card {
+    background: #1a2332;
+    border-radius: 12px;
+    border: 1px solid #2a3a4e;
+    padding: 25px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   STATS GRID (Page 1)
+   ============================================ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 30px 40px;
+}
+
+.stat-card { text-align: center; }
+
+.stat-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: #00d4ff;
+    margin-bottom: 5px;
+}
+
+.stat-card.alert .stat-value { color: #ff4757; }
+
+.stat-label {
+    font-size: 13px;
+    color: #7a8fa6;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ============================================
+   CHARTS GRID (Page 1)
+   ============================================ */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 0 40px 20px;
+}
+
+.chart-card h3 {
+    color: #00d4ff;
+    margin-bottom: 15px;
+    font-size: 16px;
+    border-bottom: 1px solid #2a3a4e;
+    padding-bottom: 10px;
+}
+
+.chart-img {
+    width: 100%;
+    border-radius: 8px;
+    background: #fff;
+    padding: 5px;
+}
+
+/* ============================================
+   GRAPHIQUES GRID (Page 2)
+   ============================================ */
+.graph-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px 40px 30px;
+}
+
+.graph-item {
+    cursor: pointer;
+    text-align: center;
+    padding: 30px 20px;
+    transition: all 0.3s;
+    border: 1px solid #2a3a4e;
+}
+
+.graph-item:hover {
+    border-color: #00d4ff;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
+}
+
+.graph-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.graph-item h3 {
+    color: #00d4ff;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.graph-item p {
+    color: #7a8fa6;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* ============================================
+   MODAL (Page 2 - affichage graphique)
+   ============================================ */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-content {
+    background: #1a2332;
+    border: 1px solid #00d4ff;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 900px;
+    max-height: 90vh;
+    width: 90%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: #ff4757;
+    font-size: 28px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.modal-close:hover {
+    transform: scale(1.2);
+}
+
+.modal-content h3 {
+    color: #00d4ff;
+    font-size: 20px;
+    margin-bottom: 20px;
+    padding-right: 40px;
+}
+
+.modal-content img {
+    width: 100%;
+    border-radius: 8px;
+    background: #fff;
+    padding: 5px;
+}
+
+.modal-desc {
+    color: #7a8fa6;
+    margin-top: 15px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ============================================
+   TABLE (Page 3)
+   ============================================ */
+.table-section {
+    padding: 20px 40px 30px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.table-stats {
+    color: #7a8fa6;
+    font-size: 14px;
+}
+
+.badge {
+    background: #ff4757;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+#search-input {
+    background: #0f1923;
+    border: 1px solid #2a3a4e;
+    color: #e0e6ed;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 280px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#search-input:focus { border-color: #00d4ff; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead th {
+    background: #0f1923;
+    color: #00d4ff;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #2a3a4e;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #1e2d3d;
+    font-size: 14px;
+}
+
+tbody tr:hover { background: #1e2d3d; }
+tbody tr:nth-child(even) { background: #15202d; }
+
+.rank {
+    color: #7a8fa6;
+    font-size: 13px;
+}
+
+.high-danger {
+    color: #ff4757;
+    font-weight: 600;
+}
+
+.medium-danger {
+    color: #ffa502;
+    font-weight: 600;
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination button {
+    background: #1a2332;
+    border: 1px solid #2a3a4e;
+    color: #e0e6ed;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.pagination button:hover {
+    background: #00d4ff;
+    color: #0f1923;
+    border-color: #00d4ff;
+}
+
+.pagination button.active {
+    background: #00d4ff;
+    color: #0f1923;
+    border-color: #00d4ff;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #4a5568;
+    font-size: 13px;
+    border-top: 1px solid #1e2d3d;
+    margin-top: 20px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .graph-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .graph-grid { grid-template-columns: 1fr; }
+    .navbar { flex-direction: column; padding: 10px 20px; }
+    .nav-links { width: 100%; justify-content: center; }
+    .stats-grid, .charts-grid, .table-section, .graph-grid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}

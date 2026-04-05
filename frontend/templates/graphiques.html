@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% set active = "graphiques" %}
+{% block title %}Graphiques ML - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h2>Graphiques Machine Learning</h2>
+    <p>Cliquez sur un graphique pour l'afficher</p>
+</section>
+
+<!-- LISTE DES GRAPHIQUES -->
+<section class="graph-grid">
+
+    <div class="card graph-item" onclick="showGraph('confusion_matrix.png', 'Matrice de Confusion - XGBoost', 'Montre les predictions correctes (bleu fonce) et les erreurs. Vrais Positifs = fraudes correctement detectees. Faux Positifs = normaux flagges par erreur.')">
+        <div class="graph-icon">&#129518;</div>
+        <h3>Matrice de Confusion</h3>
+        <p>Predictions correctes vs erreurs du modele XGBoost</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('roc_curve.png', 'Courbe ROC (AUC = 1.0)', 'La courbe ROC montre la performance du modele. Plus elle est proche du coin haut-gauche, mieux c est. AUC = 1.0 signifie une detection parfaite.')">
+        <div class="graph-icon">&#128200;</div>
+        <h3>Courbe ROC</h3>
+        <p>Performance globale du modele (AUC = 1.0)</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('precision_recall_curve.png', 'Courbe Precision-Recall', 'Equilibre entre precision (pas de fausses alertes) et recall (attraper tous les fraudeurs). Ideal pour les donnees desequilibrees.')">
+        <div class="graph-icon">&#9878;</div>
+        <h3>Precision-Recall</h3>
+        <p>Equilibre entre precision et detection</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('feature_importance.png', 'Importance des Features', 'Quelles features sont les plus utiles pour detecter la fraude. Appels par jour et IMEI sont les plus importants.')">
+        <div class="graph-icon">&#127942;</div>
+        <h3>Feature Importance</h3>
+        <p>Les indicateurs les plus decisifs pour la detection</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('score_distribution.png', 'Distribution des Scores', 'Comment le modele note chaque numero. Les normaux sont a gauche (score bas), les fraudes a droite (score haut).')">
+        <div class="graph-icon">&#128202;</div>
+        <h3>Distribution des Scores</h3>
+        <p>Repartition des scores fraude vs normal</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('correlation_features_v2.png', 'Correlation des Features V2', 'Relations entre les 13 features. Rouge = correlation positive, Bleu = correlation negative.')">
+        <div class="graph-icon">&#128308;</div>
+        <h3>Correlation Features V2</h3>
+        <p>Relations entre sortants, entrants, mobilite</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('sortants_vs_entrants.png', 'Sortants vs Entrants', 'Chaque point = un numero. Les suspects (rouge) ont beaucoup plus de sortants que d entrants.')">
+        <div class="graph-icon">&#128260;</div>
+        <h3>Sortants vs Entrants</h3>
+        <p>Appels sortants vs entrants (suspects en rouge)</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('variance_vs_mobilite.png', 'Variance vs Mobilite', 'Les SIM Box ont une faible mobilite (peu de locations) et une variance sortante elevee (appellent plein de numeros).')">
+        <div class="graph-icon">&#128205;</div>
+        <h3>Variance vs Mobilite</h3>
+        <p>Diversite des appeles vs deplacement geographique</p>
+    </div>
+
+    <div class="card graph-item" onclick="showGraph('outlier_votes.png', 'Votes Outliers', 'Nombre de methodes (Z-Score, IQR, Isolation Forest) qui flaggent chaque numero. 3/3 = tres suspect.')">
+        <div class="graph-icon">&#9989;</div>
+        <h3>Votes des 3 Methodes</h3>
+        <p>Consensus Z-Score + IQR + Isolation Forest</p>
+    </div>
+
+</section>
+
+<!-- MODAL POUR AFFICHER LE GRAPHIQUE -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('modal').classList.remove('show')">&times;</button>
+        <h3 id="modal-title"></h3>
+        <img id="modal-img" src="" alt="">
+        <p id="modal-desc" class="modal-desc"></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showGraph(filename, title, description) {
+    document.getElementById("modal-img").src = "/static/img/" + filename;
+    document.getElementById("modal-title").textContent = title;
+    document.getElementById("modal-desc").textContent = description;
+    document.getElementById("modal").classList.add("show");
+}
+
+function closeModal(event) {
+    if (event.target === document.getElementById("modal")) {
+        document.getElementById("modal").classList.remove("show");
+    }
+}
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        document.getElementById("modal").classList.remove("show");
+    }
+});
+</script>
+{% endblock %}
