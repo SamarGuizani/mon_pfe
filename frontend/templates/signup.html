@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - SIM Box Fraud Detection</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="login-body">
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">&#128100;</div>
+            <h1>Creer un compte</h1>
+            <p>Un code de verification sera envoye a votre email</p>
+        </div>
+
+        {% if error %}
+        <div class="login-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/signup">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="votre@email.com" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" placeholder="Votre nom" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Mot de passe (min 6 caracteres)</label>
+                <input type="password" id="password" name="password" placeholder="Mot de passe" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" class="form-select">
+                    <option value="analyst">Analyst (lecture seule)</option>
+                    <option value="admin">Admin (acces complet)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-login">S'inscrire</button>
+        </form>
+
+        <div class="login-links">
+            <a href="/login">Deja un compte ? Se connecter</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

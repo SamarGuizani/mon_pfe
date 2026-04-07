@@ -10,6 +10,9 @@ data/*.csv
 .DS_Store
 Thumbs.db
 
+# Secrets (mot de passe email)
+frontend/email_config.py
+
 # IDE
 .vscode/
 .idea/

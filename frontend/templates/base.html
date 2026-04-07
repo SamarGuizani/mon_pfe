@@ -14,8 +14,15 @@
     <div class="nav-brand">SIM Box Fraud Detection</div>
     <div class="nav-links">
         <a href="/" class="nav-link {% if active == 'dashboard' %}active{% endif %}">Dashboard</a>
+        <a href="/resultats-ml" class="nav-link {% if active == 'resultats_ml' %}active{% endif %}">Resultats ML</a>
+        <a href="/prediction" class="nav-link {% if active == 'prediction' %}active{% endif %}">Prediction IA</a>
         <a href="/graphiques" class="nav-link {% if active == 'graphiques' %}active{% endif %}">Graphiques</a>
         <a href="/liste-noire" class="nav-link {% if active == 'liste_noire' %}active{% endif %}">Liste Noire</a>
+    </div>
+    <div class="nav-user">
+        <span class="user-badge {{ current_user.role }}">{{ current_user.role|upper }}</span>
+        <span class="user-name">{{ current_user.username }}</span>
+        <a href="/logout" class="btn-logout">Deconnexion</a>
     </div>
 </nav>
 

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification - SIM Box Fraud Detection</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="login-body">
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">&#128231;</div>
+            <h1>Verifiez votre email</h1>
+            <p>Un code a 6 chiffres a ete envoye a <strong>{{ email }}</strong></p>
+        </div>
+
+        {% if success %}
+        <div class="login-success">{{ success }}</div>
+        <div class="login-links">
+            <a href="/login" class="btn-login" style="display:block; text-align:center; text-decoration:none; margin-top:15px;">Se connecter</a>
+        </div>
+        {% else %}
+            {% if error %}
+            <div class="login-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/verify">
+                <input type="hidden" name="email" value="{{ email }}">
+                <div class="form-group">
+                    <label for="code">Code de verification</label>
+                    <input type="text" id="code" name="code" placeholder="123456"
+                           required maxlength="6" pattern="[0-9]{6}"
+                           style="text-align:center; font-size:24px; letter-spacing:8px;">
+                </div>
+                <button type="submit" class="btn-login">Verifier</button>
+            </form>
+
+            <div class="login-links">
+                <a href="/login">Retour a la connexion</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

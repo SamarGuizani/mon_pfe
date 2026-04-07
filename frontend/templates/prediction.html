@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% set active = "prediction" %}
+{% block title %}Prediction IA - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h2>Prediction IA</h2>
+    <p>Entrez un numero MSISDN pour savoir si c'est un fraudeur ou non</p>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="predict-section">
+    <div class="card predict-search-card">
+        <div class="predict-input-group">
+            <input type="text" id="msisdn-input" class="predict-input"
+                   placeholder="Ex: +21690493475"
+                   onkeydown="if(event.key==='Enter') predire()">
+            <button class="btn-predict" onclick="predire()">
+                Predire
+            </button>
+        </div>
+        <p class="predict-hint">Le modele XGBoost analyse les 12 features de ce numero et predit fraude ou normal</p>
+    </div>
+</section>
+
+<!-- LOADING -->
+<div id="pred-loading" class="loading" style="display:none;">
+    <div class="spinner"></div>
+    <p>L'IA analyse ce numero...</p>
+</div>
+
+<!-- ERREUR -->
+<div id="pred-error" class="pred-error" style="display:none;"></div>
+
+<!-- RESULTAT -->
+<section id="pred-result" class="predict-section" style="display:none;">
+    <!-- Verdict -->
+    <div class="card predict-verdict-card" id="verdict-card">
+        <div class="verdict-msisdn" id="verdict-msisdn"></div>
+        <div class="verdict-label" id="verdict-label"></div>
+        <div class="verdict-proba">
+            <span>Probabilite de fraude : </span>
+            <span class="verdict-proba-value" id="verdict-proba">--</span>
+        </div>
+        <div class="verdict-bar-container">
+            <div class="verdict-bar" id="verdict-bar"></div>
+        </div>
+    </div>
+
+    <!-- Features du numero -->
+    <div class="card">
+        <h3 style="color:#00d4ff; margin-bottom:15px;">Profil du numero</h3>
+        <div class="features-grid" id="features-grid"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function predire() {
+    const msisdn = document.getElementById("msisdn-input").value.trim();
+    if (!msisdn) return;
+
+    document.getElementById("pred-loading").style.display = "flex";
+    document.getElementById("pred-result").style.display = "none";
+    document.getElementById("pred-error").style.display = "none";
+
+    const res = await fetch("/api/predict-msisdn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ msisdn: msisdn })
+    });
+    const d = await res.json();
+
+    document.getElementById("pred-loading").style.display = "none";
+
+    if (d.error) {
+        const errDiv = document.getElementById("pred-error");
+        errDiv.textContent = d.error;
+        errDiv.style.display = "block";
+        return;
+    }
+
+    // Verdict
+    const isFraude = d.prediction === "Fraude";
+    const card = document.getElementById("verdict-card");
+    card.className = "card predict-verdict-card " + (isFraude ? "verdict-fraude" : "verdict-normal");
+
+    document.getElementById("verdict-msisdn").textContent = d.msisdn;
+    document.getElementById("verdict-label").textContent = d.prediction.toUpperCase();
+    document.getElementById("verdict-proba").textContent = d.probabilite_fraude + "%";
+
+    const bar = document.getElementById("verdict-bar");
+    bar.style.width = d.probabilite_fraude + "%";
+    bar.className = "verdict-bar " + (isFraude ? "bar-fraude" : "bar-normal");
+
+    // Features
+    const grid = document.getElementById("features-grid");
+    grid.innerHTML = "";
+
+    const featureLabels = {
+        "nombre_appels": "Nombre d'appels",
+        "duree_totale_sec": "Duree totale (sec)",
+        "duree_moyenne": "Duree moyenne",
+        "ratio_appels_courts": "% Appels courts",
+        "nb_destinataires_uniques": "Destinataires uniques",
+        "nb_imei_utilises": "IMEI utilises",
+        "nb_cellules_uniques": "Cellules uniques",
+        "nb_lac_uniques": "LAC uniques",
+        "nb_jours_actifs": "Jours actifs",
+        "appels_par_jour": "Appels/jour",
+        "heures_activite_totale": "Heures activite",
+        "ratio_appels_sortants": "% Sortants"
+    };
+
+    for (const [key, value] of Object.entries(d.features)) {
+        const isAnomaly = d.anomalies && d.anomalies[key];
+        const div = document.createElement("div");
+        div.className = "feature-cell " + (isAnomaly ? "feature-anomaly" : "");
+        div.innerHTML = `
+            <div class="feature-name">${featureLabels[key] || key}</div>
+            <div class="feature-value">${typeof value === 'number' ? value.toLocaleString('fr-FR') : value}</div>
+            ${isAnomaly ? '<div class="feature-alert">ANORMAL</div>' : ''}
+        `;
+        grid.appendChild(div);
+    }
+
+    document.getElementById("pred-result").style.display = "block";
+    document.getElementById("pred-result").scrollIntoView({ behavior: "smooth" });
+}
+</script>
+{% endblock %}

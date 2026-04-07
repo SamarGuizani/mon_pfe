@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% set active = "resultats_ml" %}
+{% block title %}Resultats ML - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h2>Resultats Machine Learning</h2>
+    <p>Apprentissage (70%) vs Test (30%) - XGBoost</p>
+</section>
+
+<!-- SPLIT TRAIN / TEST -->
+<section class="ml-split-grid">
+    <!-- CARTE TRAIN (70%) -->
+    <div class="card ml-card train-card">
+        <div class="ml-badge train-badge">APPRENTISSAGE (70%)</div>
+        <h3>Donnees d'entrainement</h3>
+        <p class="ml-desc">Le modele apprend sur ces donnees. Il voit les reponses.</p>
+        <div class="ml-stats">
+            <div class="ml-stat">
+                <span class="ml-stat-value" id="train-total">--</span>
+                <span class="ml-stat-label">MSISDN total</span>
+            </div>
+            <div class="ml-stat">
+                <span class="ml-stat-value danger" id="train-fraude">--</span>
+                <span class="ml-stat-label">Fraudes</span>
+            </div>
+            <div class="ml-stat">
+                <span class="ml-stat-value safe" id="train-normal">--</span>
+                <span class="ml-stat-label">Normaux</span>
+            </div>
+        </div>
+        <div class="ml-features">
+            <h4>12 Features utilisees :</h4>
+            <div id="features-list" class="features-tags"></div>
+        </div>
+    </div>
+
+    <!-- CARTE TEST (30%) -->
+    <div class="card ml-card test-card">
+        <div class="ml-badge test-badge">TEST (30%)</div>
+        <h3>Donnees de test</h3>
+        <p class="ml-desc">Le modele n'a <strong>JAMAIS vu</strong> ces donnees. C'est l'examen.</p>
+        <div class="ml-stats">
+            <div class="ml-stat">
+                <span class="ml-stat-value" id="test-total">--</span>
+                <span class="ml-stat-label">MSISDN total</span>
+            </div>
+            <div class="ml-stat">
+                <span class="ml-stat-value danger" id="test-fraude">--</span>
+                <span class="ml-stat-label">Fraudes</span>
+            </div>
+            <div class="ml-stat">
+                <span class="ml-stat-value safe" id="test-normal">--</span>
+                <span class="ml-stat-label">Normaux</span>
+            </div>
+        </div>
+        <div class="test-action">
+            <button class="btn-launch" id="btn-test" onclick="lancerTest()">
+                Lancer l'evaluation sur le Test (30%)
+            </button>
+            <p class="ml-hint">Cliquez pour que le modele predise sur les donnees qu'il n'a jamais vues</p>
+        </div>
+    </div>
+</section>
+
+<!-- RESULTATS DU TEST (apparait apres le clic) -->
+<section id="test-results" class="test-results" style="display:none;">
+    <div class="card">
+        <h3 class="results-title">Resultats de l'evaluation sur le Test (30%)</h3>
+
+        <!-- Metriques -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="res-f1">--</div>
+                <div class="metric-label">F1-Score</div>
+                <div class="metric-desc">Equilibre precision/recall</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="res-precision">--</div>
+                <div class="metric-label">Precision</div>
+                <div class="metric-desc">Fraudes correctement flaggees</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="res-recall">--</div>
+                <div class="metric-label">Recall</div>
+                <div class="metric-desc">Fraudes attrapees</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="res-auc">--</div>
+                <div class="metric-label">ROC-AUC</div>
+                <div class="metric-desc">Performance globale</div>
+            </div>
+        </div>
+
+        <!-- Matrice de confusion HTML -->
+        <h4 style="color:#00d4ff; margin: 25px 0 15px;">Matrice de Confusion</h4>
+        <div class="confusion-matrix">
+            <table class="cm-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Predit Normal</th>
+                        <th>Predit Fraude</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Reel Normal</th>
+                        <td class="cm-tn" id="cm-tn">--</td>
+                        <td class="cm-fp" id="cm-fp">--</td>
+                    </tr>
+                    <tr>
+                        <th>Reel Fraude</th>
+                        <td class="cm-fn" id="cm-fn">--</td>
+                        <td class="cm-tp" id="cm-tp">--</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="cm-legend">
+                <span class="cm-legend-item"><span class="dot tn"></span> Vrai Negatif (correct)</span>
+                <span class="cm-legend-item"><span class="dot tp"></span> Vrai Positif (correct)</span>
+                <span class="cm-legend-item"><span class="dot fp"></span> Faux Positif (erreur)</span>
+                <span class="cm-legend-item"><span class="dot fn"></span> Faux Negatif (erreur)</span>
+            </div>
+        </div>
+
+        <!-- Resume -->
+        <div class="test-summary" id="test-summary"></div>
+    </div>
+</section>
+
+<!-- LOADING SPINNER -->
+<div id="loading" class="loading" style="display:none;">
+    <div class="spinner"></div>
+    <p>Le modele XGBoost evalue sur les 30%...</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", loadMLInfo);
+
+async function loadMLInfo() {
+    const res = await fetch("/api/ml-info");
+    const d = await res.json();
+
+    document.getElementById("train-total").textContent = fmt(d.train_total);
+    document.getElementById("train-fraude").textContent = fmt(d.train_fraude);
+    document.getElementById("train-normal").textContent = fmt(d.train_normal);
+    document.getElementById("test-total").textContent = fmt(d.test_total);
+    document.getElementById("test-fraude").textContent = fmt(d.test_fraude);
+    document.getElementById("test-normal").textContent = fmt(d.test_normal);
+
+    const tagsDiv = document.getElementById("features-list");
+    d.features.forEach(f => {
+        const tag = document.createElement("span");
+        tag.className = "feature-tag";
+        tag.textContent = f;
+        tagsDiv.appendChild(tag);
+    });
+}
+
+async function lancerTest() {
+    const btn = document.getElementById("btn-test");
+    btn.disabled = true;
+    btn.textContent = "Evaluation en cours...";
+
+    document.getElementById("loading").style.display = "flex";
+    document.getElementById("test-results").style.display = "none";
+
+    const res = await fetch("/api/run-test", { method: "POST" });
+    const d = await res.json();
+
+    document.getElementById("loading").style.display = "none";
+
+    if (d.error) {
+        alert("Erreur: " + d.error);
+        btn.disabled = false;
+        btn.textContent = "Lancer l'evaluation sur le Test (30%)";
+        return;
+    }
+
+    // Afficher les resultats
+    document.getElementById("res-f1").textContent = d.f1;
+    document.getElementById("res-precision").textContent = d.precision;
+    document.getElementById("res-recall").textContent = d.recall;
+    document.getElementById("res-auc").textContent = d.auc;
+
+    document.getElementById("cm-tn").textContent = fmt(d.confusion_matrix.vrai_negatif);
+    document.getElementById("cm-fp").textContent = fmt(d.confusion_matrix.faux_positif);
+    document.getElementById("cm-fn").textContent = fmt(d.confusion_matrix.faux_negatif);
+    document.getElementById("cm-tp").textContent = fmt(d.confusion_matrix.vrai_positif);
+
+    document.getElementById("test-summary").innerHTML = `
+        <p>Le modele a predit sur <strong>${fmt(d.total_test)}</strong> numeros qu'il n'avait jamais vus.</p>
+        <p>Il a detecte <strong class="danger">${fmt(d.fraudes_detectees)}</strong> fraudes
+           sur <strong>${fmt(d.fraudes_reelles)}</strong> reelles.</p>
+        <p>Score F1 = <strong class="highlight">${d.f1}</strong>
+           (1.0 = parfait, 0.5 = hasard)</p>
+    `;
+
+    document.getElementById("test-results").style.display = "block";
+    document.getElementById("test-results").scrollIntoView({ behavior: "smooth" });
+
+    btn.textContent = "Relancer l'evaluation";
+    btn.disabled = false;
+}
+
+function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
+</script>
+{% endblock %}
