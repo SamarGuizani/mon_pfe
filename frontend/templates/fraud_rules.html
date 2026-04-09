@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% set active = "fraud_rules" %}
+{% block title %}Fraud Rules - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Fraud Rules</h1>
+        <div class="subtitle">Regles de detection utilisees par le systeme</div>
+    </div>
+</div>
+
+<div class="page-content">
+
+    <!-- EXPLICATION SIMPLE -->
+    <div class="explain-box">
+        <h4>Comment fonctionne la detection ?</h4>
+        <p>
+            Le systeme analyse <strong>741 millions d'appels</strong> et extrait des indicateurs (features)
+            pour chaque numero de telephone. Ensuite, il applique des <strong>regles metier</strong>
+            (definies par l'entreprise) pour identifier les comportements suspects.
+            Un numero est considere <strong>suspect</strong> s'il correspond a au moins une regle.
+        </p>
+    </div>
+
+    <!-- FEATURES EXTRAITES -->
+    <div class="card" style="margin-bottom:20px;">
+        <h3 style="color:#e67e22; margin-bottom:15px;">Features extraites par le systeme</h3>
+        <table>
+            <thead>
+                <tr><th>#</th><th>Feature</th><th>Description</th><th>Formule SQL</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td><strong>appels_sortants</strong></td><td>Nombre d'appels MO (sortants)</td><td><code>COUNT(*) FILTER (WHERE call_type='mSOriginating')</code></td></tr>
+                <tr><td>2</td><td><strong>appels_entrants</strong></td><td>Nombre d'appels MT (entrants)</td><td><code>COUNT(*) FILTER (WHERE call_type='mSTerminating')</code></td></tr>
+                <tr><td>3</td><td><strong>duree_sortants</strong></td><td>Duree totale des sortants (sec)</td><td><code>SUM(duration_seconds) FILTER (MO)</code></td></tr>
+                <tr><td>4</td><td><strong>duree_entrants</strong></td><td>Duree totale des entrants (sec)</td><td><code>SUM(duration_seconds) FILTER (MT)</code></td></tr>
+                <tr><td>5</td><td><strong>avg_duree_sortants</strong></td><td>Duree moyenne sortants</td><td><code>AVG(duration_seconds) FILTER (MO)</code></td></tr>
+                <tr><td>6</td><td><strong>avg_duree_entrants</strong></td><td>Duree moyenne entrants</td><td><code>AVG(duration_seconds) FILTER (MT)</code></td></tr>
+                <tr><td>7</td><td><strong>variance_sortants %</strong></td><td>Diversite des appeles (0-100%)</td><td><code>DISTINCT called / total MO * 100</code></td></tr>
+                <tr><td>8</td><td><strong>variance_entrants %</strong></td><td>Diversite des appelants</td><td><code>DISTINCT calling / total MT * 100</code></td></tr>
+                <tr><td>9</td><td><strong>location_count</strong></td><td>Positions distinctes (lac+cell)</td><td><code>DISTINCT lac||'-'||cell_id</code></td></tr>
+                <tr><td>10</td><td><strong>active_hours</strong></td><td>Heures d'activite distinctes</td><td><code>DISTINCT DATE_TRUNC('hour')</code></td></tr>
+                <tr><td>11</td><td><strong>distinct_imei</strong></td><td>Nombre d'appareils utilises</td><td><code>COUNT(DISTINCT imei)</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- REGLES DE L'ENTREPRISE -->
+    <h3 style="color:#e67e22; margin-bottom:15px;">Regles de detection (entreprise)</h3>
+    <div class="rules-grid">
+
+        <div class="card rule-card">
+            <h3>Rule Bypass General</h3>
+            <div class="rule-desc">
+                Detecte les numeros avec <strong>100% de variance</strong> (chaque appel vers un numero different)
+                et <strong>zero duree entrants</strong> (ne recoit aucun appel abouti).
+            </div>
+            <div style="margin-top:8px;">
+                <span class="rule-tag">variance_sortants >= 100%</span>
+                <span class="rule-tag">duree_entrants = 0</span>
+                <span class="rule-tag">appels_sortants >= 30</span>
+            </div>
+            <div class="rule-sql">
+                HAVING variance_sortants >= 100<br>
+                AND duree_entrants = 0<br>
+                AND appels_sortants >= 30
+            </div>
+        </div>
+
+        <div class="card rule-card">
+            <h3>Rule Bypass SIM Box (IMEI)</h3>
+            <div class="rule-desc">
+                Un meme numero utilise dans <strong>3 appareils ou plus</strong>. Normal : 1 telephone = 1 IMEI.
+                SIM Box : les SIM sont tournees entre plusieurs boitiers.
+            </div>
+            <div style="margin-top:8px;">
+                <span class="rule-tag">distinct_imei >= 3</span>
+                <span class="rule-tag">appels_sortants >= 3</span>
+            </div>
+            <div class="rule-sql">
+                HAVING COUNT(DISTINCT imei) >= 3<br>
+                AND appels_sortants >= 3
+            </div>
+        </div>
+
+        <div class="card rule-card">
+            <h3>Rule Cell Location</h3>
+            <div class="rule-desc">
+                Le numero ne <strong>bouge presque pas</strong> (tres peu de positions distinctes).
+                Un humain normal se deplace, une SIM Box est fixe.
+            </div>
+            <div style="margin-top:8px;">
+                <span class="rule-tag">location_count <= 3</span>
+                <span class="rule-tag">variance_sortants >= 85%</span>
+                <span class="rule-tag">appels_sortants >= 15</span>
+            </div>
+            <div class="rule-sql">
+                HAVING location_count <= 3<br>
+                AND variance_sortants >= 85<br>
+                AND appels_sortants >= 15
+            </div>
+        </div>
+
+        <div class="card rule-card">
+            <h3>Rule Active Hours</h3>
+            <div class="rule-desc">
+                Le numero est actif sur <strong>tres peu d'heures</strong> (burst d'activite).
+                Les SIM Box operent souvent en rafale sur quelques heures.
+            </div>
+            <div style="margin-top:8px;">
+                <span class="rule-tag">active_hours <= 3</span>
+                <span class="rule-tag">variance_sortants >= 100%</span>
+                <span class="rule-tag">appels_sortants >= 7</span>
+            </div>
+            <div class="rule-sql">
+                HAVING active_hours <= 3<br>
+                AND variance_sortants >= 100<br>
+                AND appels_sortants >= 7
+            </div>
+        </div>
+
+        <div class="card rule-card">
+            <h3>Rule Bypass Offnet</h3>
+            <div class="rule-desc">
+                Detecte les appels <strong>entrants d'un prefixe suspect</strong> avec une variance tres elevee
+                (95%+ de numeros differents appeles).
+            </div>
+            <div style="margin-top:8px;">
+                <span class="rule-tag">variance_sortants >= 95%</span>
+                <span class="rule-tag">appels_entrants >= 15</span>
+            </div>
+            <div class="rule-sql">
+                HAVING variance_sortants >= 95<br>
+                AND appels_entrants >= 15
+            </div>
+        </div>
+
+        <div class="card rule-card">
+            <h3>Regle combinee (Liste Noire)</h3>
+            <div class="rule-desc">
+                La regle utilisee pour creer la <strong>liste noire actuelle</strong>.
+                Un numero est suspect si au moins une condition est remplie :
+            </div>
+            <div style="margin-top:8px;">
+                <span class="rule-tag">appels_sortants >= 15</span>
+                <span class="rule-tag">+ variance >= 85%</span>
+                <span class="rule-tag">OU imei >= 3</span>
+                <span class="rule-tag">OU locations <= 3</span>
+            </div>
+            <div class="rule-sql">
+                WHERE appels_sortants >= 15<br>
+                AND (variance_sortants >= 85<br>
+                &nbsp;&nbsp;OR distinct_imei >= 3<br>
+                &nbsp;&nbsp;OR location_count <= 3)
+            </div>
+        </div>
+
+    </div>
+
+    <!-- COMMENT LE ML UTILISE CES REGLES -->
+    <div class="explain-box" style="margin-top:20px;">
+        <h4>Comment le Machine Learning utilise ces regles ?</h4>
+        <p>
+            <strong>Etape 1 :</strong> Les regles ci-dessus sont utilisees pour creer des <strong>pseudo-labels</strong>
+            (on etiquette chaque numero comme "fraude" ou "normal" selon les regles).<br>
+            <strong>Etape 2 :</strong> Le modele XGBoost <strong>apprend</strong> sur 70% des numeros etiquetes.<br>
+            <strong>Etape 3 :</strong> On <strong>teste</strong> le modele sur les 30% restants qu'il n'a jamais vus.<br>
+            <strong>Resultat :</strong> Le modele detecte les fraudes avec <strong>F1 = 0.997</strong> (99.7% de precision).<br><br>
+            L'avantage du ML : il peut detecter des combinaisons de features que les regles simples ne voient pas.
+        </p>
+    </div>
+</div>
+{% endblock %}

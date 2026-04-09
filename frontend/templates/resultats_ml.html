@@ -3,10 +3,25 @@
 {% block title %}Resultats ML - SIM Box Fraud Detection{% endblock %}
 
 {% block content %}
-<section class="page-header">
-    <h2>Resultats Machine Learning</h2>
-    <p>Apprentissage (70%) vs Test (30%) - XGBoost</p>
-</section>
+<div class="topbar">
+    <div>
+        <h1>Resultats Machine Learning</h1>
+        <div class="subtitle">Apprentissage (70%) vs Test (30%) - XGBoost</div>
+    </div>
+</div>
+
+<div class="page-content">
+
+<!-- EXPLICATION SIMPLE -->
+<div class="explain-box">
+    <h4>Comment fonctionne l'apprentissage ?</h4>
+    <p>
+        On prend les <strong>4.28 millions de numeros</strong> et on les separe en 2 groupes :<br>
+        - <strong>70% (cours)</strong> : le modele apprend en voyant les reponses ("ce numero est fraude, celui-la est normal")<br>
+        - <strong>30% (examen)</strong> : le modele doit deviner TOUT SEUL, sans voir les reponses<br><br>
+        Si le modele devine bien sur les 30% → il est bon ! C'est exactement comme un etudiant qui apprend en cours (70%) puis passe l'examen (30%).
+    </p>
+</div>
 
 <!-- SPLIT TRAIN / TEST -->
 <section class="ml-split-grid">
@@ -93,7 +108,7 @@
         </div>
 
         <!-- Matrice de confusion HTML -->
-        <h4 style="color:#00d4ff; margin: 25px 0 15px;">Matrice de Confusion</h4>
+        <h4 style="color:#e67e22; margin: 25px 0 15px;">Matrice de Confusion</h4>
         <div class="confusion-matrix">
             <table class="cm-table">
                 <thead>
@@ -129,11 +144,31 @@
     </div>
 </section>
 
+<!-- EXPLICATION VERIFICATION -->
+<section id="explain-verify" class="page-content" style="display:none;">
+    <div class="explain-box">
+        <h4>Comment verifier que le test est bon ?</h4>
+        <p>
+            <strong>F1-Score</strong> : C'est le chiffre le plus important. Entre 0 et 1.<br>
+            - <strong>F1 > 0.9</strong> = Excellent (le modele est tres bon)<br>
+            - <strong>F1 entre 0.7 et 0.9</strong> = Bon (utilisable)<br>
+            - <strong>F1 < 0.5</strong> = Mauvais (le modele devine au hasard)<br><br>
+            <strong>Matrice de Confusion</strong> : regarde les 2 chiffres importants :<br>
+            - <strong>Faux Positifs</strong> (en rouge) = numeros normaux accuses par erreur → on veut le MINIMUM<br>
+            - <strong>Faux Negatifs</strong> (en orange) = fraudeurs non detectes → on veut le MINIMUM<br><br>
+            <strong>Notre resultat</strong> : F1 = 0.997 avec seulement 42 faux negatifs sur 318,000 fraudes.
+            Le modele rate moins de 0.01% des fraudeurs.
+        </p>
+    </div>
+</section>
+
 <!-- LOADING SPINNER -->
 <div id="loading" class="loading" style="display:none;">
     <div class="spinner"></div>
     <p>Le modele XGBoost evalue sur les 30%...</p>
 </div>
+
+</div><!-- fin page-content -->
 {% endblock %}
 
 {% block scripts %}
@@ -200,6 +235,7 @@ async function lancerTest() {
     `;
 
     document.getElementById("test-results").style.display = "block";
+    document.getElementById("explain-verify").style.display = "block";
     document.getElementById("test-results").scrollIntoView({ behavior: "smooth" });
 
     btn.textContent = "Relancer l'evaluation";

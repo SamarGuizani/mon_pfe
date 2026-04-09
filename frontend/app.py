@@ -356,6 +356,11 @@ def page_graphiques():
 def page_liste_noire():
     return render_template("liste_noire.html")
 
+@app.route("/fraud-rules")
+@login_required
+def page_fraud_rules():
+    return render_template("fraud_rules.html")
+
 
 # ============================================================
 # API ENDPOINTS (inchanges - tous @login_required)
@@ -476,13 +481,21 @@ def api_suspects():
         r = conn.execute(text(f"SELECT COUNT(*) FROM liste_noire_fraude {where}"), params)
         total = r.fetchone()[0]
         r = conn.execute(text(f"""
-            SELECT msisdn, nombre_appels, duree_totale_sec, ratio_appels_courts,
-                   nb_imei_utilises, nb_cellules_uniques, appels_par_jour, date_detection
-            FROM liste_noire_fraude {where} ORDER BY nombre_appels DESC LIMIT :limit OFFSET :offset
+            SELECT msisdn, nombre_appels, appels_sortants, appels_entrants,
+                   duree_sortants, duree_entrants,
+                   avg_duree_sortants, avg_duree_entrants,
+                   variance_sortants, variance_entrants,
+                   location_count, active_hours, distinct_imei, date_detection
+            FROM liste_noire_fraude {where} ORDER BY appels_sortants DESC LIMIT :limit OFFSET :offset
         """), params)
-        suspects = [{"msisdn": row[0], "nombre_appels": row[1], "duree_totale": row[2],
-                      "ratio_courts": float(row[3] or 0), "nb_imei": row[4], "nb_cellules": row[5],
-                      "appels_jour": float(row[6] or 0), "date_detection": str(row[7]) if row[7] else ""}
+        suspects = [{"msisdn": row[0], "nombre_appels": row[1],
+                      "appels_sortants": row[2], "appels_entrants": row[3],
+                      "duree_sortants": row[4], "duree_entrants": row[5],
+                      "avg_duree_sortants": float(row[6] or 0), "avg_duree_entrants": float(row[7] or 0),
+                      "variance_sortants": float(row[8] or 0), "variance_entrants": float(row[9] or 0),
+                      "location_count": row[10], "active_hours": row[11],
+                      "distinct_imei": row[12],
+                      "date_detection": str(row[13]) if row[13] else ""}
                      for row in r.fetchall()]
     return jsonify({"suspects": suspects, "total": total, "page": page,
                      "pages": (total + per_page - 1) // per_page})
@@ -492,11 +505,11 @@ def api_suspects():
 def api_top_suspects():
     with engine.connect() as conn:
         r = conn.execute(text("""
-            SELECT msisdn, nombre_appels, appels_par_jour, ratio_appels_courts, nb_cellules_uniques
+            SELECT msisdn, nombre_appels, appels_sortants, variance_sortants, distinct_locations
             FROM liste_noire_fraude ORDER BY nombre_appels DESC LIMIT 10
         """))
-        return jsonify([{"msisdn": row[0][-6:], "appels": row[1], "appels_jour": float(row[2] or 0),
-                          "ratio_courts": float(row[3] or 0), "cellules": row[4]} for row in r.fetchall()])
+        return jsonify([{"msisdn": row[0][-6:], "appels": row[1], "sortants": row[2],
+                          "variance": float(row[3] or 0), "locations": row[4]} for row in r.fetchall()])
 
 @app.route("/api/distribution")
 @login_required

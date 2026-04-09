@@ -12,7 +12,8 @@
     <div class="card">
         <div class="table-header">
             <div class="table-stats">
-                <span class="badge" id="badge-total">--</span> suspects au total
+                <span class="badge" id="badge-total">--</span> suspects detectes
+                <span class="rules-info">Regles : MO>=15 AND (variance>=85% OR IMEI>=3 OR locations<=3)</span>
             </div>
             <input type="text" id="search-input" placeholder="Rechercher un MSISDN..."
                    onkeyup="searchSuspects()">
@@ -23,13 +24,18 @@
                     <tr>
                         <th>#</th>
                         <th>MSISDN</th>
-                        <th>Appels</th>
-                        <th>Duree Totale (s)</th>
-                        <th>% Appels Courts</th>
-                        <th>IMEI Utilises</th>
-                        <th>Cellules</th>
-                        <th>Appels/Jour</th>
-                        <th>Date Detection</th>
+                        <th>Sortants</th>
+                        <th>Entrants</th>
+                        <th>Duree MO</th>
+                        <th>Duree MT</th>
+                        <th>Moy MO</th>
+                        <th>Moy MT</th>
+                        <th>Var. MO %</th>
+                        <th>Var. MT %</th>
+                        <th>Locations</th>
+                        <th>Heures</th>
+                        <th>IMEI</th>
+                        <th>Detection</th>
                     </tr>
                 </thead>
                 <tbody id="suspects-body">
@@ -56,7 +62,7 @@ async function loadSuspects(page) {
 
     document.getElementById("badge-total").textContent = fmt(data.total);
     document.getElementById("total-info").textContent =
-        `${fmt(data.total)} numeros suspects detectes par le modele XGBoost (F1 = 0.997)`;
+        `${fmt(data.total)} suspects detectes (regles entreprise)`;
 
     const tbody = document.getElementById("suspects-body");
     tbody.innerHTML = "";
@@ -67,12 +73,17 @@ async function loadSuspects(page) {
         tr.innerHTML = `
             <td class="rank">${rank}</td>
             <td><strong>${s.msisdn}</strong></td>
-            <td class="${s.nombre_appels > 1000 ? 'high-danger' : s.nombre_appels > 200 ? 'medium-danger' : ''}">${fmt(s.nombre_appels)}</td>
-            <td>${fmt(s.duree_totale)}</td>
-            <td class="${s.ratio_courts > 70 ? 'high-danger' : s.ratio_courts > 40 ? 'medium-danger' : ''}">${s.ratio_courts}%</td>
-            <td class="${s.nb_imei > 2 ? 'high-danger' : ''}">${s.nb_imei}</td>
-            <td>${s.nb_cellules}</td>
-            <td class="${s.appels_jour > 50 ? 'high-danger' : s.appels_jour > 20 ? 'medium-danger' : ''}">${s.appels_jour}</td>
+            <td class="${s.appels_sortants > 100 ? 'high-danger' : s.appels_sortants > 30 ? 'medium-danger' : ''}">${fmt(s.appels_sortants)}</td>
+            <td>${fmt(s.appels_entrants)}</td>
+            <td>${fmt(s.duree_sortants)}s</td>
+            <td>${fmt(s.duree_entrants)}s</td>
+            <td>${s.avg_duree_sortants.toFixed(1)}s</td>
+            <td>${s.avg_duree_entrants.toFixed(1)}s</td>
+            <td class="${s.variance_sortants >= 85 ? 'high-danger' : s.variance_sortants >= 50 ? 'medium-danger' : ''}">${s.variance_sortants.toFixed(1)}%</td>
+            <td>${s.variance_entrants.toFixed(1)}%</td>
+            <td class="${s.location_count <= 3 ? 'high-danger' : ''}">${s.location_count}</td>
+            <td class="${s.active_hours <= 3 ? 'high-danger' : ''}">${s.active_hours}</td>
+            <td class="${s.distinct_imei >= 3 ? 'high-danger' : ''}">${s.distinct_imei}</td>
             <td>${s.date_detection.substring(0, 10)}</td>
         `;
         tbody.appendChild(tr);
@@ -84,19 +95,14 @@ async function loadSuspects(page) {
 function renderPagination(current, total) {
     const div = document.getElementById("pagination");
     div.innerHTML = "";
-
     if (current > 1) addBtn(div, "Precedent", () => loadSuspects(current - 1));
-
     let start = Math.max(1, current - 3);
     let end = Math.min(total, current + 3);
-
     if (start > 1) { addBtn(div, "1", () => loadSuspects(1)); addDots(div); }
-
     for (let i = start; i <= end; i++) {
         const btn = addBtn(div, i, () => loadSuspects(i));
         if (i === current) btn.className = "active";
     }
-
     if (end < total) { addDots(div); addBtn(div, total, () => loadSuspects(total)); }
     if (current < total) addBtn(div, "Suivant", () => loadSuspects(current + 1));
 }

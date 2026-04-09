@@ -9,28 +9,56 @@
 </head>
 <body>
 
-<!-- NAVIGATION -->
-<nav class="navbar">
-    <div class="nav-brand">SIM Box Fraud Detection</div>
-    <div class="nav-links">
-        <a href="/" class="nav-link {% if active == 'dashboard' %}active{% endif %}">Dashboard</a>
-        <a href="/resultats-ml" class="nav-link {% if active == 'resultats_ml' %}active{% endif %}">Resultats ML</a>
-        <a href="/prediction" class="nav-link {% if active == 'prediction' %}active{% endif %}">Prediction IA</a>
-        <a href="/graphiques" class="nav-link {% if active == 'graphiques' %}active{% endif %}">Graphiques</a>
-        <a href="/liste-noire" class="nav-link {% if active == 'liste_noire' %}active{% endif %}">Liste Noire</a>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <h2>Fraud Detection</h2>
+        <p>SIM Box - PFE 2026</p>
     </div>
-    <div class="nav-user">
-        <span class="user-badge {{ current_user.role }}">{{ current_user.role|upper }}</span>
-        <span class="user-name">{{ current_user.username }}</span>
-        <a href="/logout" class="btn-logout">Deconnexion</a>
+
+    <div class="sidebar-section">MAIN</div>
+    <a href="/" class="sidebar-link {% if active == 'dashboard' %}active{% endif %}">
+        <span class="icon">&#128202;</span> Dashboard
+    </a>
+
+    <div class="sidebar-section">DETECTION</div>
+    <a href="/resultats-ml" class="sidebar-link {% if active == 'resultats_ml' %}active{% endif %}">
+        <span class="icon">&#129504;</span> Resultats ML
+    </a>
+    <a href="/prediction" class="sidebar-link {% if active == 'prediction' %}active{% endif %}">
+        <span class="icon">&#128269;</span> Prediction IA
+    </a>
+    <a href="/liste-noire" class="sidebar-link {% if active == 'liste_noire' %}active{% endif %}">
+        <span class="icon">&#128211;</span> Liste Noire
+    </a>
+
+    <div class="sidebar-section">ANALYSE</div>
+    <a href="/graphiques" class="sidebar-link {% if active == 'graphiques' %}active{% endif %}">
+        <span class="icon">&#128200;</span> Graphiques
+    </a>
+    <a href="/fraud-rules" class="sidebar-link {% if active == 'fraud_rules' %}active{% endif %}">
+        <span class="icon">&#128220;</span> Fraud Rules
+    </a>
+
+    <!-- USER -->
+    <div class="sidebar-user">
+        <div class="user-avatar">{{ current_user.username[0]|upper }}</div>
+        <div class="user-info">
+            <div class="name">{{ current_user.username }}</div>
+            <span class="role-badge {{ current_user.role }}">{{ current_user.role }}</span>
+        </div>
+        <a href="/logout" class="btn-logout-sidebar" title="Deconnexion">&#9211;</a>
     </div>
-</nav>
+</aside>
 
-{% block content %}{% endblock %}
+<!-- MAIN CONTENT -->
+<div class="main-content">
+    {% block content %}{% endblock %}
 
-<footer>
-    <p>PFE - Detection de Fraude SIM Box | 741M CDR | XGBoost F1=0.997 | Samar 2026</p>
-</footer>
+    <footer class="main-footer">
+        PFE - Detection de Fraude SIM Box | 741M CDR | XGBoost F1=0.997 | Samar 2026
+    </footer>
+</div>
 
 {% block scripts %}{% endblock %}
 </body>

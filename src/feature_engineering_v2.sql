@@ -1,14 +1,22 @@
 -- ============================================================
--- FEATURE ENGINEERING V2 : Features personnalisees par Samar
+-- FEATURE ENGINEERING V2 - Corrige selon les regles de l'entreprise
 -- ============================================================
--- Sortants = mSOriginating, callForwarding
--- Entrants = mSTerminating
--- On ignore les SMS (mSOriginatingSMSinMSC, mSTerminatingSMSinMSC)
+-- Sortants (MO) = mSOriginating
+-- Entrants (MT) = mSTerminating
+-- callForwarding = compte comme sortant
+-- SMS ignores (mSOriginatingSMSinMSC, mSTerminatingSMSinMSC)
+--
+-- Corrections appliquees :
+--   - location = lac||'-'||cell_id (pas cell_id seul)
+--   - variance en % (pas en ratio 0-1)
+--   - active_hours ajoute (DISTINCT DATE_TRUNC('hour'))
+--   - distinct_imei ajoute (>= 3 = SIM Box)
 --
 -- Execution estimee : 2-3 heures sur 741M lignes
 -- ============================================================
 
-DROP TABLE IF EXISTS features_msisdn_v2;
+DROP TYPE IF EXISTS features_msisdn_v2 CASCADE;
+DROP TABLE IF EXISTS features_msisdn_v2 CASCADE;
 
 CREATE TABLE features_msisdn_v2 AS
 SELECT
@@ -17,30 +25,27 @@ SELECT
     -- =============================================
     -- 1. NOMBRE D'APPELS
     -- =============================================
-    -- Total (hors SMS)
+    -- Total appels (hors SMS)
     COUNT(*) FILTER (WHERE call_type IN ('mSOriginating', 'mSTerminating', 'callForwarding'))
         AS nombre_appels,
 
-    -- Appels sortants
+    -- Appels sortants (MO) - Rule: count(*) filter (where type_call='MO')
     COUNT(*) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding'))
         AS appels_sortants,
 
-    -- Appels entrants
+    -- Appels entrants (MT) - Rule: COUNT(callingnumber)
     COUNT(*) FILTER (WHERE call_type = 'mSTerminating')
         AS appels_entrants,
 
     -- =============================================
     -- 2. DUREE TOTALE
     -- =============================================
-    -- Duree totale (tous appels)
-    COALESCE(SUM(duration_seconds) FILTER (WHERE call_type IN ('mSOriginating', 'mSTerminating', 'callForwarding')), 0)
-        AS duree_totale,
-
-    -- Duree sortants
+    -- Duree totale sortants - Rule: SUM(callduration) FILTER (WHERE type_call='MO')
     COALESCE(SUM(duration_seconds) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding')), 0)
         AS duree_sortants,
 
-    -- Duree entrants
+    -- Duree totale entrants - Rule: SUM(callduration) FILTER (WHERE type_call='MT')
+    -- Regle bypass general : coalesce(SUM(callduration) FILTER (WHERE type_call='MT'),0) = 0 → suspect si MT duration = 0
     COALESCE(SUM(duration_seconds) FILTER (WHERE call_type = 'mSTerminating'), 0)
         AS duree_entrants,
 
@@ -56,48 +61,82 @@ SELECT
         AS avg_duree_entrants,
 
     -- =============================================
-    -- 4. VARIANCE SORTANTS
-    --    = distinct appeles / total appels sortants
-    --    Proche de 1.0 = chaque appel vers un numero different (suspect)
-    --    Proche de 0.0 = appelle toujours le meme numero (normal)
+    -- 4. VARIANCE SORTANTS (en %)
+    --    = (distinct appeles / total appels sortants) * 100
+    --    Regles entreprise : seuil >= 85%, 90%, 95%, ou 100%
+    --    Proche de 100% = chaque appel vers un numero DIFFERENT (tres suspect)
+    --    Proche de 0%   = appelle toujours le MEME numero (normal)
     -- =============================================
     ROUND(
-        COUNT(DISTINCT called_number) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding'))::numeric
-        / NULLIF(COUNT(*) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding')), 0), 4
+        COUNT(DISTINCT called_number) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding'))::FLOAT
+        / NULLIF(COUNT(*) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding')), 0)::FLOAT * 100, 2
     ) AS variance_sortants,
 
     -- =============================================
-    -- 5. VARIANCE ENTRANTS
-    --    = distinct appelants / total appels entrants
-    --    Proche de 1.0 = recoit des appels de plein de numeros differents
-    --    Proche de 0.0 = recoit toujours du meme numero
+    -- 5. VARIANCE ENTRANTS (en %)
+    --    = (distinct appelants / total appels entrants) * 100
     -- =============================================
     ROUND(
-        COUNT(DISTINCT calling_number) FILTER (WHERE call_type = 'mSTerminating')::numeric
-        / NULLIF(COUNT(*) FILTER (WHERE call_type = 'mSTerminating'), 0), 4
+        COUNT(DISTINCT calling_number) FILTER (WHERE call_type = 'mSTerminating')::FLOAT
+        / NULLIF(COUNT(*) FILTER (WHERE call_type = 'mSTerminating'), 0)::FLOAT * 100, 2
     ) AS variance_entrants,
 
     -- =============================================
     -- 6. MOBILITE
-    --    Distinct locations (cell_id) pour sortants et entrants
-    --    SIM Box = tres peu de locations (fixe)
-    --    Humain normal = beaucoup de locations (bouge)
+    --    Regle entreprise : COUNT(DISTINCT lac||'-'||cell_id)
+    --    PAS cell_id seul ! Il faut combiner lac + cell_id
+    --    SIM Box = tres peu de locations (fixe, <= 2-3)
+    --    Humain  = beaucoup de locations (bouge)
     -- =============================================
-    -- Locations distinctes globales
-    COUNT(DISTINCT cell_id)
-        AS distinct_locations,
+    -- Locations distinctes globales (lac+cell combinee)
+    COUNT(DISTINCT lac || '-' || cell_id)
+        AS location_count,
 
     -- Locations distinctes sortants
-    COUNT(DISTINCT cell_id) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding'))
-        AS distinct_locations_sortants,
+    COUNT(DISTINCT lac || '-' || cell_id) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding'))
+        AS location_count_sortants,
 
     -- Locations distinctes entrants
-    COUNT(DISTINCT cell_id) FILTER (WHERE call_type = 'mSTerminating')
-        AS distinct_locations_entrants
+    COUNT(DISTINCT lac || '-' || cell_id) FILTER (WHERE call_type = 'mSTerminating')
+        AS location_count_entrants,
+
+    -- =============================================
+    -- 7. ACTIVE HOURS (ajoute - manquait avant)
+    --    Regle entreprise : COUNT(DISTINCT DATE_TRUNC('hour', timestamp)) <= 3
+    --    SIM Box = active seulement quelques heures (burst)
+    --    Humain  = active sur beaucoup d'heures differentes
+    -- =============================================
+    COUNT(DISTINCT DATE_TRUNC('hour', timestamp))
+        AS active_hours,
+
+    -- =============================================
+    -- 8. DISTINCT IMEI (ajoute - manquait avant)
+    --    Regle entreprise : COUNT(DISTINCT imei) >= 3 = SIM Box
+    --    SIM Box = un msisdn utilise dans plusieurs appareils
+    --    Humain  = 1 seul IMEI (son telephone)
+    -- =============================================
+    COUNT(DISTINCT imei)
+        AS distinct_imei,
+
+    -- =============================================
+    -- 9. UNIQUE CALLED / CALLING (details)
+    --    Pour analyse detaillee
+    -- =============================================
+    COUNT(DISTINCT called_number) FILTER (WHERE call_type IN ('mSOriginating', 'callForwarding'))
+        AS unique_called,
+
+    COUNT(DISTINCT calling_number) FILTER (WHERE call_type = 'mSTerminating')
+        AS unique_calling,
+
+    -- =============================================
+    -- 10. JOURS ACTIFS
+    -- =============================================
+    COUNT(DISTINCT DATE(timestamp))
+        AS nb_jours_actifs
 
 FROM cdr_data
 GROUP BY msisdn;
 
--- Index
-CREATE INDEX idx_features_v2_msisdn ON features_msisdn_v2(msisdn);
-CREATE INDEX idx_features_v2_appels ON features_msisdn_v2(nombre_appels DESC);
+-- Index pour accelerer les requetes
+CREATE INDEX idx_fv2_msisdn ON features_msisdn_v2(msisdn);
+CREATE INDEX idx_fv2_calls ON features_msisdn_v2(appels_sortants DESC);
