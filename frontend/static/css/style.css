@@ -358,6 +358,45 @@ tbody tr:hover { background: #fff9e6; }
 .high-danger { color: #e74c3c; font-weight: 600; }
 .medium-danger { color: #e67e22; font-weight: 600; }
 
+/* Action buttons (admin) */
+.actions-cell { white-space: nowrap; }
+
+.btn-confirm {
+    background: #27ae60; color: white; border: none;
+    padding: 5px 10px; border-radius: 5px; cursor: pointer;
+    font-size: 14px; margin-right: 4px;
+}
+.btn-confirm:hover { background: #2ecc71; }
+
+.btn-reject {
+    background: #e74c3c; color: white; border: none;
+    padding: 5px 10px; border-radius: 5px; cursor: pointer;
+    font-size: 14px;
+}
+.btn-reject:hover { background: #ff6b6b; }
+
+.btn-delete {
+    background: #e74c3c; color: white; border: none;
+    padding: 5px 12px; border-radius: 5px; cursor: pointer;
+    font-size: 12px;
+}
+.btn-delete:hover { background: #ff6b6b; }
+
+.role-select {
+    background: #f5f6fa; border: 1px solid #e0e0e0;
+    padding: 5px 10px; border-radius: 5px; font-size: 13px;
+    cursor: pointer;
+}
+
+.status-tag {
+    padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
+}
+.status-tag.pending { background: #fff3cd; color: #e67e22; }
+.status-tag.confirmed { background: #d4edda; color: #27ae60; }
+.status-tag.rejected { background: #f8d7da; color: #e74c3c; }
+
+.verif-stats { font-size: 13px; }
+
 /* Status badges */
 .status-new { background: #27ae60; color: white; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
 .status-medium { background: #f39c12; color: white; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }

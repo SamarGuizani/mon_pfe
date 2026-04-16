@@ -361,6 +361,102 @@ def page_liste_noire():
 def page_fraud_rules():
     return render_template("fraud_rules.html")
 
+@app.route("/users")
+@login_required
+def page_users():
+    if not current_user.is_admin:
+        return redirect(url_for("page_dashboard"))
+    return render_template("users.html")
+
+
+# ============================================================
+# API : VERIFICATION MANUELLE (admin only)
+# ============================================================
+@app.route("/api/verify", methods=["POST"])
+@login_required
+def api_verify():
+    if not current_user.is_admin:
+        return jsonify({"error": "Acces refuse. Admin uniquement."}), 403
+    data = request.get_json()
+    msisdn = data.get("msisdn", "")
+    statut = data.get("statut", "")
+    commentaire = data.get("commentaire", "")
+    if statut not in ("confirme", "faux_positif"):
+        return jsonify({"error": "Statut invalide"}), 400
+    with engine.begin() as conn:
+        # Supprimer l'ancien statut si existe
+        conn.execute(text("DELETE FROM verification_fraude WHERE msisdn = :m"), {"m": msisdn})
+        conn.execute(text("""
+            INSERT INTO verification_fraude (msisdn, statut, commentaire, verifie_par)
+            VALUES (:m, :s, :c, :u)
+        """), {"m": msisdn, "s": statut, "c": commentaire, "u": current_user.username})
+    return jsonify({"success": True, "msisdn": msisdn, "statut": statut})
+
+
+@app.route("/api/verification-stats")
+@login_required
+def api_verification_stats():
+    with engine.connect() as conn:
+        r = conn.execute(text("""
+            SELECT
+                COUNT(*) FILTER (WHERE statut = 'confirme') AS confirmes,
+                COUNT(*) FILTER (WHERE statut = 'faux_positif') AS faux_positifs,
+                COUNT(*) AS total_verifies
+            FROM verification_fraude
+        """))
+        row = r.fetchone()
+    return jsonify({"confirmes": row[0], "faux_positifs": row[1], "total_verifies": row[2]})
+
+
+# ============================================================
+# API : GESTION UTILISATEURS (admin only)
+# ============================================================
+@app.route("/api/users")
+@login_required
+def api_users():
+    if not current_user.is_admin:
+        return jsonify({"error": "Acces refuse"}), 403
+    with engine.connect() as conn:
+        r = conn.execute(text("""
+            SELECT id, email, username, role, is_verified, created_at
+            FROM users ORDER BY id
+        """))
+        users = [{"id": row[0], "email": row[1], "username": row[2],
+                   "role": row[3], "verified": row[4],
+                   "created": str(row[5])[:19] if row[5] else ""}
+                  for row in r.fetchall()]
+    return jsonify(users)
+
+
+@app.route("/api/users/delete", methods=["POST"])
+@login_required
+def api_delete_user():
+    if not current_user.is_admin:
+        return jsonify({"error": "Acces refuse"}), 403
+    data = request.get_json()
+    user_id = data.get("id")
+    if user_id == current_user.id:
+        return jsonify({"error": "Vous ne pouvez pas supprimer votre propre compte"}), 400
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM login_history WHERE user_id = :id"), {"id": user_id})
+        conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+    return jsonify({"success": True})
+
+
+@app.route("/api/users/change-role", methods=["POST"])
+@login_required
+def api_change_role():
+    if not current_user.is_admin:
+        return jsonify({"error": "Acces refuse"}), 403
+    data = request.get_json()
+    user_id = data.get("id")
+    new_role = data.get("role")
+    if new_role not in ("admin", "analyst"):
+        return jsonify({"error": "Role invalide"}), 400
+    with engine.begin() as conn:
+        conn.execute(text("UPDATE users SET role = :r WHERE id = :id"), {"r": new_role, "id": user_id})
+    return jsonify({"success": True})
+
 
 # ============================================================
 # API ENDPOINTS (inchanges - tous @login_required)

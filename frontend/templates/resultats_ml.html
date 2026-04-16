@@ -70,9 +70,15 @@
             </div>
         </div>
         <div class="test-action">
+            {% if current_user.is_admin %}
             <button class="btn-launch" id="btn-test" onclick="lancerTest()">
                 Lancer l'evaluation sur le Test (30%)
             </button>
+            {% else %}
+            <button class="btn-launch" disabled style="opacity:0.4; cursor:not-allowed;">
+                Lancer l'evaluation (Admin uniquement)
+            </button>
+            {% endif %}
             <p class="ml-hint">Cliquez pour que le modele predise sur les donnees qu'il n'a jamais vues</p>
         </div>
     </div>

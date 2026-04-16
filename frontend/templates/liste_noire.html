@@ -3,12 +3,15 @@
 {% block title %}Liste Noire - SIM Box Fraud Detection{% endblock %}
 
 {% block content %}
-<section class="page-header">
-    <h2>Liste Noire des Numeros Suspects</h2>
-    <p id="total-info">Chargement...</p>
-</section>
+<div class="topbar">
+    <div>
+        <h1>Liste Noire des Numeros Suspects</h1>
+        <div class="subtitle" id="total-info">Chargement...</div>
+    </div>
+    <div id="verif-stats" class="verif-stats"></div>
+</div>
 
-<section class="table-section">
+<div class="page-content">
     <div class="card">
         <div class="table-header">
             <div class="table-stats">
@@ -26,16 +29,15 @@
                         <th>MSISDN</th>
                         <th>Sortants</th>
                         <th>Entrants</th>
-                        <th>Duree MO</th>
-                        <th>Duree MT</th>
-                        <th>Moy MO</th>
-                        <th>Moy MT</th>
                         <th>Var. MO %</th>
-                        <th>Var. MT %</th>
                         <th>Locations</th>
                         <th>Heures</th>
                         <th>IMEI</th>
-                        <th>Detection</th>
+                        {% if current_user.is_admin %}
+                        <th>Actions</th>
+                        {% else %}
+                        <th>Statut</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody id="suspects-body">
@@ -44,15 +46,29 @@
         </div>
         <div class="pagination" id="pagination"></div>
     </div>
-</section>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+const IS_ADMIN = {{ 'true' if current_user.is_admin else 'false' }};
 let currentPage = 1;
 const perPage = 20;
 
-document.addEventListener("DOMContentLoaded", () => loadSuspects(1));
+document.addEventListener("DOMContentLoaded", () => {
+    loadSuspects(1);
+    loadVerifStats();
+});
+
+async function loadVerifStats() {
+    const res = await fetch("/api/verification-stats");
+    const d = await res.json();
+    document.getElementById("verif-stats").innerHTML = `
+        <span style="color:#27ae60; font-weight:600;">${d.confirmes} confirmes</span> |
+        <span style="color:#e74c3c; font-weight:600;">${d.faux_positifs} faux positifs</span> |
+        <span style="color:#999;">${d.total_verifies} verifies</span>
+    `;
+}
 
 async function loadSuspects(page) {
     currentPage = page;
@@ -70,26 +86,52 @@ async function loadSuspects(page) {
     data.suspects.forEach((s, i) => {
         const rank = (page - 1) * perPage + i + 1;
         const tr = document.createElement("tr");
+
+        let actionCol = "";
+        if (IS_ADMIN) {
+            actionCol = `
+                <td class="actions-cell">
+                    <button class="btn-confirm" onclick="verifier('${s.msisdn}', 'confirme')" title="Confirmer fraude">&#10004;</button>
+                    <button class="btn-reject" onclick="verifier('${s.msisdn}', 'faux_positif')" title="Faux positif">&#10008;</button>
+                </td>
+            `;
+        } else {
+            actionCol = `<td><span class="status-tag pending">En attente</span></td>`;
+        }
+
         tr.innerHTML = `
             <td class="rank">${rank}</td>
             <td><strong>${s.msisdn}</strong></td>
             <td class="${s.appels_sortants > 100 ? 'high-danger' : s.appels_sortants > 30 ? 'medium-danger' : ''}">${fmt(s.appels_sortants)}</td>
             <td>${fmt(s.appels_entrants)}</td>
-            <td>${fmt(s.duree_sortants)}s</td>
-            <td>${fmt(s.duree_entrants)}s</td>
-            <td>${s.avg_duree_sortants.toFixed(1)}s</td>
-            <td>${s.avg_duree_entrants.toFixed(1)}s</td>
             <td class="${s.variance_sortants >= 85 ? 'high-danger' : s.variance_sortants >= 50 ? 'medium-danger' : ''}">${s.variance_sortants.toFixed(1)}%</td>
-            <td>${s.variance_entrants.toFixed(1)}%</td>
             <td class="${s.location_count <= 3 ? 'high-danger' : ''}">${s.location_count}</td>
             <td class="${s.active_hours <= 3 ? 'high-danger' : ''}">${s.active_hours}</td>
             <td class="${s.distinct_imei >= 3 ? 'high-danger' : ''}">${s.distinct_imei}</td>
-            <td>${s.date_detection.substring(0, 10)}</td>
+            ${actionCol}
         `;
         tbody.appendChild(tr);
     });
 
     renderPagination(data.page, data.pages);
+}
+
+async function verifier(msisdn, statut) {
+    const label = statut === "confirme" ? "CONFIRMER comme fraude" : "Marquer comme FAUX POSITIF";
+    if (!confirm(`${label} : ${msisdn} ?`)) return;
+
+    const res = await fetch("/api/verify", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({msisdn: msisdn, statut: statut, commentaire: ""})
+    });
+    const d = await res.json();
+    if (d.success) {
+        alert(`${msisdn} marque comme "${statut}"`);
+        loadVerifStats();
+    } else {
+        alert("Erreur: " + d.error);
+    }
 }
 
 function renderPagination(current, total) {
@@ -107,28 +149,11 @@ function renderPagination(current, total) {
     if (current < total) addBtn(div, "Suivant", () => loadSuspects(current + 1));
 }
 
-function addBtn(parent, text, onclick) {
-    const btn = document.createElement("button");
-    btn.textContent = text;
-    btn.onclick = onclick;
-    parent.appendChild(btn);
-    return btn;
-}
-
-function addDots(parent) {
-    const span = document.createElement("span");
-    span.textContent = "...";
-    span.style.color = "#7a8fa6";
-    span.style.padding = "0 5px";
-    parent.appendChild(span);
-}
+function addBtn(p, t, fn) { const b = document.createElement("button"); b.textContent = t; b.onclick = fn; p.appendChild(b); return b; }
+function addDots(p) { const s = document.createElement("span"); s.textContent = "..."; s.style.cssText = "color:#999;padding:0 5px;"; p.appendChild(s); }
+function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
 
 let searchTimeout;
-function searchSuspects() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => loadSuspects(1), 400);
-}
-
-function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
+function searchSuspects() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => loadSuspects(1), 400); }
 </script>
 {% endblock %}

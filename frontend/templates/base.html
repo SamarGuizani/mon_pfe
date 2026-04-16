@@ -40,6 +40,13 @@
         <span class="icon">&#128220;</span> Fraud Rules
     </a>
 
+    {% if current_user.is_admin %}
+    <div class="sidebar-section">ADMINISTRATION</div>
+    <a href="/users" class="sidebar-link {% if active == 'users' %}active{% endif %}">
+        <span class="icon">&#128101;</span> Gestion Utilisateurs
+    </a>
+    {% endif %}
+
     <!-- USER -->
     <div class="sidebar-user">
         <div class="user-avatar">{{ current_user.username[0]|upper }}</div>

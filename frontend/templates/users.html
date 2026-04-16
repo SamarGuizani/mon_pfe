@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% set active = "users" %}
+{% block title %}Gestion Utilisateurs - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Gestion des Utilisateurs</h1>
+        <div class="subtitle">Administration des comptes (Admin uniquement)</div>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Verifie</th>
+                    <th>Date creation</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users-body"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", loadUsers);
+
+async function loadUsers() {
+    const res = await fetch("/api/users");
+    const users = await res.json();
+
+    const tbody = document.getElementById("users-body");
+    tbody.innerHTML = "";
+
+    users.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${u.id}</td>
+            <td><strong>${u.email}</strong></td>
+            <td>${u.username}</td>
+            <td>
+                <select onchange="changeRole(${u.id}, this.value)" class="role-select">
+                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    <option value="analyst" ${u.role === 'analyst' ? 'selected' : ''}>Analyst</option>
+                </select>
+            </td>
+            <td>${u.verified ? '<span style="color:#27ae60;">Oui</span>' : '<span style="color:#e74c3c;">Non</span>'}</td>
+            <td>${u.created}</td>
+            <td>
+                <button class="btn-delete" onclick="deleteUser(${u.id}, '${u.email}')">Supprimer</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function changeRole(id, role) {
+    const res = await fetch("/api/users/change-role", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({id: id, role: role})
+    });
+    const d = await res.json();
+    if (d.success) alert("Role modifie !");
+    else alert("Erreur: " + d.error);
+}
+
+async function deleteUser(id, email) {
+    if (!confirm(`Supprimer l'utilisateur ${email} ?`)) return;
+    const res = await fetch("/api/users/delete", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({id: id})
+    });
+    const d = await res.json();
+    if (d.success) { alert("Utilisateur supprime"); loadUsers(); }
+    else alert("Erreur: " + d.error);
+}
+</script>
+{% endblock %}
