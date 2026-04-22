@@ -1,0 +1,17 @@
+{
+  "train_size": 2997975,
+  "train_fraudes": 49628,
+  "test_size": 1284847,
+  "test_fraudes": 21269,
+  "fraudes_detectees_test": 21300,
+  "precision": 0.998356807511737,
+  "recall": 0.999811932860031,
+  "f1": 0.9990838403533088,
+  "auc": 0.9999999774511967,
+  "confusion_matrix": {
+    "vrai_negatif": 1263543,
+    "faux_positif": 35,
+    "faux_negatif": 4,
+    "vrai_positif": 21265
+  }
+}

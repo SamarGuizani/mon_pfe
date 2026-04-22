@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% set active = "liste_noire_train" %}
+{% block title %}Liste Noire Train - SIM Box{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Liste Noire - Apprentissage (70%)</h1>
+        <div class="subtitle" id="total-info">Fraudes utilisees pour ENTRAINER le modele</div>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="explain-box">
+        <h4>C'est quoi cette liste ?</h4>
+        <p>
+            Ces numeros sont les <strong>fraudes du TRAIN SET (70%)</strong>. Le modele XGBoost a <strong>appris</strong>
+            leur comportement pendant l'entrainement. Ces fraudes lui ont ete montrees avec leur etiquette
+            (on lui a dit "c'est fraude").
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="table-header">
+            <div class="table-stats">
+                <span class="badge" id="badge-total" style="background:#3498db;">--</span>
+                fraudes dans le train set
+            </div>
+            <input type="text" id="search-input" placeholder="Rechercher un MSISDN..." onkeyup="searchSuspects()">
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>MSISDN</th>
+                        <th>Sortants</th>
+                        <th>Entrants</th>
+                        <th>Var. Sort %</th>
+                        <th>Var. Entr %</th>
+                        <th>Duree Sort</th>
+                        <th>Duree Entr</th>
+                        <th>Locations</th>
+                        <th>Heures</th>
+                        <th>IMEI</th>
+                        <th>Unique Called</th>
+                        <th>Unique Calling</th>
+                        <th>Jours</th>
+                    </tr>
+                </thead>
+                <tbody id="suspects-body"></tbody>
+            </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPage = 1;
+const perPage = 20;
+
+document.addEventListener("DOMContentLoaded", () => loadSuspects(1));
+
+async function loadSuspects(page) {
+    currentPage = page;
+    const search = document.getElementById("search-input").value;
+    const res = await fetch(`/api/suspects-train?page=${page}&per_page=${perPage}&search=${search}`);
+    const data = await res.json();
+
+    document.getElementById("badge-total").textContent = fmt(data.total);
+
+    const tbody = document.getElementById("suspects-body");
+    tbody.innerHTML = "";
+
+    data.suspects.forEach((s, i) => {
+        const rank = (page - 1) * perPage + i + 1;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="rank">${rank}</td>
+            <td><strong>${s.msisdn}</strong></td>
+            <td class="${s.appels_sortants > 100 ? 'high-danger' : ''}">${fmt(s.appels_sortants)}</td>
+            <td>${fmt(s.appels_entrants)}</td>
+            <td class="${s.variance_sortants >= 85 ? 'high-danger' : ''}">${s.variance_sortants.toFixed(1)}%</td>
+            <td>${s.variance_entrants.toFixed(1)}%</td>
+            <td>${fmt(s.duree_sortants)}s</td>
+            <td>${fmt(s.duree_entrants)}s</td>
+            <td class="${s.location_count <= 3 ? 'high-danger' : ''}">${s.location_count}</td>
+            <td class="${s.active_hours <= 3 ? 'high-danger' : ''}">${s.active_hours}</td>
+            <td class="${s.distinct_imei >= 3 ? 'high-danger' : ''}">${s.distinct_imei}</td>
+            <td>${s.unique_called}</td>
+            <td>${s.unique_calling}</td>
+            <td>${s.nb_jours_actifs}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    renderPagination(data.page, data.pages);
+}
+
+function renderPagination(current, total) {
+    const div = document.getElementById("pagination");
+    div.innerHTML = "";
+    if (current > 1) addBtn(div, "Precedent", () => loadSuspects(current - 1));
+    let start = Math.max(1, current - 3);
+    let end = Math.min(total, current + 3);
+    if (start > 1) { addBtn(div, "1", () => loadSuspects(1)); addDots(div); }
+    for (let i = start; i <= end; i++) {
+        const btn = addBtn(div, i, () => loadSuspects(i));
+        if (i === current) btn.className = "active";
+    }
+    if (end < total) { addDots(div); addBtn(div, total, () => loadSuspects(total)); }
+    if (current < total) addBtn(div, "Suivant", () => loadSuspects(current + 1));
+}
+
+function addBtn(p, t, fn) { const b = document.createElement("button"); b.textContent = t; b.onclick = fn; p.appendChild(b); return b; }
+function addDots(p) { const s = document.createElement("span"); s.textContent = "..."; s.style.cssText = "color:#999;padding:0 5px;"; p.appendChild(s); }
+function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
+
+let searchTimeout;
+function searchSuspects() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => loadSuspects(1), 400); }
+</script>
+{% endblock %}

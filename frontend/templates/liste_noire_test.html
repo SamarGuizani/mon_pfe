@@ -1,25 +1,53 @@
 {% extends "base.html" %}
-{% set active = "liste_noire" %}
-{% block title %}Liste Noire - SIM Box Fraud Detection{% endblock %}
+{% set active = "liste_noire_test" %}
+{% block title %}Liste Noire Test - SIM Box{% endblock %}
 
 {% block content %}
 <div class="topbar">
     <div>
-        <h1>Liste Noire des Numeros Suspects</h1>
-        <div class="subtitle" id="total-info">Chargement...</div>
+        <h1>Liste Noire - Test (30%)</h1>
+        <div class="subtitle" id="total-info">Fraudes detectees par le modele XGBoost (numeros JAMAIS vus)</div>
     </div>
-    <div id="verif-stats" class="verif-stats"></div>
 </div>
 
 <div class="page-content">
+    <div class="explain-box">
+        <h4>C'est quoi cette liste ?</h4>
+        <p>
+            Ces numeros sont les <strong>fraudes detectees dans le TEST SET (30%)</strong>. Le modele XGBoost
+            <strong>n'avait JAMAIS vu ces numeros</strong> pendant l'entrainement !
+            Il les a detectes avec sa propre intelligence. La colonne <strong>"Proba IA"</strong>
+            montre la certitude du modele (0-100%).
+        </p>
+    </div>
+
+    <!-- METRIQUES DU MODELE -->
+    <div id="metrics-box" class="stats-grid">
+        <div class="card stat-card">
+            <div class="stat-value green" id="m-f1">--</div>
+            <div class="stat-label">F1-Score</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-value green" id="m-precision">--</div>
+            <div class="stat-label">Precision</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-value green" id="m-recall">--</div>
+            <div class="stat-label">Recall</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-value green" id="m-auc">--</div>
+            <div class="stat-label">AUC</div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-header">
             <div class="table-stats">
-                <span class="badge" id="badge-total">--</span> suspects detectes
-                <span class="rules-info">Regles : MO>=15 AND (variance>=85% OR IMEI>=3 OR locations<=3)</span>
+                <span class="badge" id="badge-total" style="background:#27ae60;">--</span>
+                fraudes detectees par XGBoost
             </div>
-            <input type="text" id="search-input" placeholder="Rechercher un MSISDN..."
-                   onkeyup="searchSuspects()">
+            <input type="text" id="search-input" placeholder="Rechercher un MSISDN..." onkeyup="searchSuspects()">
         </div>
         <div class="table-wrapper">
             <table>
@@ -27,29 +55,22 @@
                     <tr>
                         <th>#</th>
                         <th>MSISDN</th>
+                        <th>Proba IA</th>
                         <th>Sortants</th>
                         <th>Entrants</th>
                         <th>Var. Sort %</th>
                         <th>Var. Entr %</th>
-                        <th>Duree Sort (s)</th>
-                        <th>Duree Entr (s)</th>
-                        <th>Loc. Sort</th>
-                        <th>Loc. Entr</th>
-                        <th>Loc. Total</th>
+                        <th>Duree Sort</th>
+                        <th>Duree Entr</th>
+                        <th>Locations</th>
                         <th>Heures</th>
                         <th>IMEI</th>
                         <th>Unique Called</th>
                         <th>Unique Calling</th>
                         <th>Jours</th>
-                        {% if current_user.is_admin %}
-                        <th>Actions</th>
-                        {% else %}
-                        <th>Statut</th>
-                        {% endif %}
                     </tr>
                 </thead>
-                <tbody id="suspects-body">
-                </tbody>
+                <tbody id="suspects-body"></tbody>
             </table>
         </div>
         <div class="pagination" id="pagination"></div>
@@ -59,36 +80,32 @@
 
 {% block scripts %}
 <script>
-const IS_ADMIN = {{ 'true' if current_user.is_admin else 'false' }};
 let currentPage = 1;
 const perPage = 20;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadSuspects(1);
-    loadVerifStats();
+    loadMetrics();
 });
 
-async function loadVerifStats() {
+async function loadMetrics() {
     try {
-        const res = await fetch("/api/verification-stats");
-        const d = await res.json();
-        document.getElementById("verif-stats").innerHTML = `
-            <span style="color:#27ae60; font-weight:600;">${d.confirmes||0} confirmes</span> |
-            <span style="color:#e74c3c; font-weight:600;">${d.faux_positifs||0} faux positifs</span> |
-            <span style="color:#999;">${d.total_verifies||0} verifies</span>
-        `;
+        const res = await fetch("/api/metrics-v2");
+        const m = await res.json();
+        document.getElementById("m-f1").textContent = m.f1.toFixed(4);
+        document.getElementById("m-precision").textContent = m.precision.toFixed(4);
+        document.getElementById("m-recall").textContent = m.recall.toFixed(4);
+        document.getElementById("m-auc").textContent = m.auc.toFixed(4);
     } catch(e) {}
 }
 
 async function loadSuspects(page) {
     currentPage = page;
     const search = document.getElementById("search-input").value;
-    const res = await fetch(`/api/suspects?page=${page}&per_page=${perPage}&search=${search}`);
+    const res = await fetch(`/api/suspects-test?page=${page}&per_page=${perPage}&search=${search}`);
     const data = await res.json();
 
     document.getElementById("badge-total").textContent = fmt(data.total);
-    document.getElementById("total-info").textContent =
-        `${fmt(data.total)} suspects detectes (regles entreprise)`;
 
     const tbody = document.getElementById("suspects-body");
     tbody.innerHTML = "";
@@ -96,60 +113,28 @@ async function loadSuspects(page) {
     data.suspects.forEach((s, i) => {
         const rank = (page - 1) * perPage + i + 1;
         const tr = document.createElement("tr");
-
-        let actionCol = "";
-        if (IS_ADMIN) {
-            actionCol = `
-                <td class="actions-cell">
-                    <button class="btn-confirm" onclick="verifier('${s.msisdn}', 'confirme')" title="Confirmer fraude">&#10004;</button>
-                    <button class="btn-reject" onclick="verifier('${s.msisdn}', 'faux_positif')" title="Faux positif">&#10008;</button>
-                </td>
-            `;
-        } else {
-            actionCol = `<td><span class="status-tag pending">En attente</span></td>`;
-        }
-
+        const proba = (s.xgb_proba * 100);
         tr.innerHTML = `
             <td class="rank">${rank}</td>
             <td><strong>${s.msisdn}</strong></td>
-            <td class="${s.appels_sortants > 100 ? 'high-danger' : s.appels_sortants > 30 ? 'medium-danger' : ''}">${fmt(s.appels_sortants)}</td>
+            <td class="${proba >= 90 ? 'high-danger' : 'medium-danger'}" style="font-weight:700;">${proba.toFixed(1)}%</td>
+            <td class="${s.appels_sortants > 100 ? 'high-danger' : ''}">${fmt(s.appels_sortants)}</td>
             <td>${fmt(s.appels_entrants)}</td>
-            <td class="${s.variance_sortants >= 85 ? 'high-danger' : s.variance_sortants >= 50 ? 'medium-danger' : ''}">${s.variance_sortants.toFixed(1)}%</td>
+            <td class="${s.variance_sortants >= 85 ? 'high-danger' : ''}">${s.variance_sortants.toFixed(1)}%</td>
             <td>${s.variance_entrants.toFixed(1)}%</td>
-            <td>${fmt(s.duree_sortants)}</td>
-            <td>${fmt(s.duree_entrants)}</td>
-            <td>${s.location_count_sortants}</td>
-            <td>${s.location_count_entrants}</td>
+            <td>${fmt(s.duree_sortants)}s</td>
+            <td>${fmt(s.duree_entrants)}s</td>
             <td class="${s.location_count <= 3 ? 'high-danger' : ''}">${s.location_count}</td>
             <td class="${s.active_hours <= 3 ? 'high-danger' : ''}">${s.active_hours}</td>
             <td class="${s.distinct_imei >= 3 ? 'high-danger' : ''}">${s.distinct_imei}</td>
             <td>${s.unique_called}</td>
             <td>${s.unique_calling}</td>
             <td>${s.nb_jours_actifs}</td>
-            ${actionCol}
         `;
         tbody.appendChild(tr);
     });
 
     renderPagination(data.page, data.pages);
-}
-
-async function verifier(msisdn, statut) {
-    const label = statut === "confirme" ? "CONFIRMER comme fraude" : "Marquer comme FAUX POSITIF";
-    if (!confirm(`${label} : ${msisdn} ?`)) return;
-
-    const res = await fetch("/api/verify", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({msisdn: msisdn, statut: statut, commentaire: ""})
-    });
-    const d = await res.json();
-    if (d.success) {
-        alert(`${msisdn} marque comme "${statut}"`);
-        loadVerifStats();
-    } else {
-        alert("Erreur: " + (d.error || "inconnue"));
-    }
 }
 
 function renderPagination(current, total) {

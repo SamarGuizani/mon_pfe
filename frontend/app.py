@@ -361,6 +361,162 @@ def page_liste_noire():
 def page_fraud_rules():
     return render_template("fraud_rules.html")
 
+@app.route("/verification-manuelle")
+@login_required
+def page_verification_manuelle():
+    if not current_user.is_admin:
+        return redirect(url_for("page_dashboard"))
+    return render_template("verification_manuelle.html")
+
+@app.route("/liste-noire-train")
+@login_required
+def page_liste_noire_train():
+    return render_template("liste_noire_train.html")
+
+@app.route("/liste-noire-test")
+@login_required
+def page_liste_noire_test():
+    return render_template("liste_noire_test.html")
+
+
+# API pour liste_noire_train
+@app.route("/api/suspects-train")
+@login_required
+def api_suspects_train():
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    search = request.args.get("search", "", type=str)
+    offset = (page - 1) * per_page
+    with engine.connect() as conn:
+        where, params = "", {"limit": per_page, "offset": offset}
+        if search:
+            where = "WHERE msisdn LIKE :search"
+            params["search"] = f"%{search}%"
+        r = conn.execute(text(f"SELECT COUNT(*) FROM liste_noire_train {where}"), params)
+        total = r.fetchone()[0]
+        r = conn.execute(text(f"""
+            SELECT msisdn, appels_sortants, appels_entrants, variance_sortants, variance_entrants,
+                   duree_sortants, duree_entrants, location_count, active_hours, distinct_imei,
+                   unique_called, unique_calling, nb_jours_actifs
+            FROM liste_noire_train {where} ORDER BY appels_sortants DESC LIMIT :limit OFFSET :offset
+        """), params)
+        suspects = [{
+            "msisdn": row[0],
+            "appels_sortants": row[1], "appels_entrants": row[2],
+            "variance_sortants": float(row[3] or 0), "variance_entrants": float(row[4] or 0),
+            "duree_sortants": row[5], "duree_entrants": row[6],
+            "location_count": row[7], "active_hours": row[8],
+            "distinct_imei": row[9],
+            "unique_called": row[10], "unique_calling": row[11],
+            "nb_jours_actifs": row[12]
+        } for row in r.fetchall()]
+    return jsonify({"suspects": suspects, "total": total, "page": page,
+                     "pages": (total + per_page - 1) // per_page})
+
+
+# API pour liste_noire_test (avec probabilite XGBoost)
+@app.route("/api/suspects-test")
+@login_required
+def api_suspects_test():
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    search = request.args.get("search", "", type=str)
+    offset = (page - 1) * per_page
+    with engine.connect() as conn:
+        where, params = "", {"limit": per_page, "offset": offset}
+        if search:
+            where = "WHERE msisdn LIKE :search"
+            params["search"] = f"%{search}%"
+        r = conn.execute(text(f"SELECT COUNT(*) FROM liste_noire_test {where}"), params)
+        total = r.fetchone()[0]
+        r = conn.execute(text(f"""
+            SELECT msisdn, appels_sortants, appels_entrants, variance_sortants, variance_entrants,
+                   duree_sortants, duree_entrants, location_count, active_hours, distinct_imei,
+                   unique_called, unique_calling, nb_jours_actifs, xgb_proba
+            FROM liste_noire_test {where} ORDER BY xgb_proba DESC LIMIT :limit OFFSET :offset
+        """), params)
+        suspects = [{
+            "msisdn": row[0],
+            "appels_sortants": row[1], "appels_entrants": row[2],
+            "variance_sortants": float(row[3] or 0), "variance_entrants": float(row[4] or 0),
+            "duree_sortants": row[5], "duree_entrants": row[6],
+            "location_count": row[7], "active_hours": row[8],
+            "distinct_imei": row[9],
+            "unique_called": row[10], "unique_calling": row[11],
+            "nb_jours_actifs": row[12],
+            "xgb_proba": float(row[13] or 0)
+        } for row in r.fetchall()]
+    return jsonify({"suspects": suspects, "total": total, "page": page,
+                     "pages": (total + per_page - 1) // per_page})
+
+
+# API pour les metriques V2
+@app.route("/api/metrics-v2")
+@login_required
+def api_metrics_v2():
+    import json
+    try:
+        with open("../data/metrics_v2.json") as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================
+# API : VERIFICATION MANUELLE (admin entre CDR fraudes confirmes)
+# ============================================================
+@app.route("/api/fraudes-confirmees", methods=["GET", "POST"])
+@login_required
+def api_fraudes_confirmees():
+    if not current_user.is_admin:
+        return jsonify({"error": "Acces refuse"}), 403
+
+    if request.method == "POST":
+        data = request.get_json()
+        msisdn = data.get("msisdn", "").strip()
+        source = data.get("source", "").strip()
+        commentaire = data.get("commentaire", "").strip()
+
+        if not msisdn:
+            return jsonify({"error": "MSISDN requis"}), 400
+
+        with engine.begin() as conn:
+            conn.execute(text("""
+                INSERT INTO fraudes_confirmees_manuelle (msisdn, source, commentaire, ajoute_par)
+                VALUES (:m, :s, :c, :u)
+            """), {"m": msisdn, "s": source, "c": commentaire, "u": current_user.username})
+
+        return jsonify({"success": True})
+
+    # GET : liste des fraudes confirmees
+    with engine.connect() as conn:
+        r = conn.execute(text("""
+            SELECT id, msisdn, source, commentaire, ajoute_par, date_ajout
+            FROM fraudes_confirmees_manuelle
+            ORDER BY date_ajout DESC
+        """))
+        rows = r.fetchall()
+
+    return jsonify({
+        "fraudes": [{
+            "id": row[0], "msisdn": row[1], "source": row[2] or "",
+            "commentaire": row[3] or "", "ajoute_par": row[4],
+            "date_ajout": str(row[5])[:19]
+        } for row in rows],
+        "total": len(rows)
+    })
+
+
+@app.route("/api/fraudes-confirmees/<int:fid>", methods=["DELETE"])
+@login_required
+def api_supprimer_fraude(fid):
+    if not current_user.is_admin:
+        return jsonify({"error": "Acces refuse"}), 403
+
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM fraudes_confirmees_manuelle WHERE id = :id"), {"id": fid})
+    return jsonify({"success": True})
+
 @app.route("/users")
 @login_required
 def page_users():
@@ -577,22 +733,28 @@ def api_suspects():
         r = conn.execute(text(f"SELECT COUNT(*) FROM liste_noire_fraude {where}"), params)
         total = r.fetchone()[0]
         r = conn.execute(text(f"""
-            SELECT msisdn, nombre_appels, appels_sortants, appels_entrants,
+            SELECT msisdn, appels_sortants, appels_entrants,
                    duree_sortants, duree_entrants,
                    avg_duree_sortants, avg_duree_entrants,
                    variance_sortants, variance_entrants,
-                   location_count, active_hours, distinct_imei, date_detection
+                   location_count, location_count_sortants, location_count_entrants,
+                   active_hours, distinct_imei,
+                   unique_called, unique_calling, nb_jours_actifs, date_detection
             FROM liste_noire_fraude {where} ORDER BY appels_sortants DESC LIMIT :limit OFFSET :offset
         """), params)
-        suspects = [{"msisdn": row[0], "nombre_appels": row[1],
-                      "appels_sortants": row[2], "appels_entrants": row[3],
-                      "duree_sortants": row[4], "duree_entrants": row[5],
-                      "avg_duree_sortants": float(row[6] or 0), "avg_duree_entrants": float(row[7] or 0),
-                      "variance_sortants": float(row[8] or 0), "variance_entrants": float(row[9] or 0),
-                      "location_count": row[10], "active_hours": row[11],
-                      "distinct_imei": row[12],
-                      "date_detection": str(row[13]) if row[13] else ""}
-                     for row in r.fetchall()]
+        suspects = [{
+            "msisdn": row[0],
+            "appels_sortants": row[1], "appels_entrants": row[2],
+            "duree_sortants": row[3], "duree_entrants": row[4],
+            "avg_duree_sortants": float(row[5] or 0), "avg_duree_entrants": float(row[6] or 0),
+            "variance_sortants": float(row[7] or 0), "variance_entrants": float(row[8] or 0),
+            "location_count": row[9],
+            "location_count_sortants": row[10], "location_count_entrants": row[11],
+            "active_hours": row[12], "distinct_imei": row[13],
+            "unique_called": row[14], "unique_calling": row[15],
+            "nb_jours_actifs": row[16],
+            "date_detection": str(row[17]) if row[17] else ""
+        } for row in r.fetchall()]
     return jsonify({"suspects": suspects, "total": total, "page": page,
                      "pages": (total + per_page - 1) // per_page})
 
@@ -601,11 +763,12 @@ def api_suspects():
 def api_top_suspects():
     with engine.connect() as conn:
         r = conn.execute(text("""
-            SELECT msisdn, nombre_appels, appels_sortants, variance_sortants, distinct_locations
-            FROM liste_noire_fraude ORDER BY nombre_appels DESC LIMIT 10
+            SELECT msisdn, appels_sortants, variance_sortants, location_count, distinct_imei
+            FROM liste_noire_fraude ORDER BY appels_sortants DESC LIMIT 10
         """))
-        return jsonify([{"msisdn": row[0][-6:], "appels": row[1], "sortants": row[2],
-                          "variance": float(row[3] or 0), "locations": row[4]} for row in r.fetchall()])
+        return jsonify([{"msisdn": row[0][-6:], "appels": row[1], "sortants": row[1],
+                          "variance": float(row[2] or 0), "locations": row[3],
+                          "imei": row[4]} for row in r.fetchall()])
 
 @app.route("/api/distribution")
 @login_required

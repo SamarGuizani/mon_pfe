@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% set active = "verification_manuelle" %}
+{% block title %}Verification Manuelle - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Verification Manuelle</h1>
+        <div class="subtitle">Ajouter manuellement les CDR confirmes 100% fraudes (admin uniquement)</div>
+    </div>
+</div>
+
+<div class="page-content">
+
+    <!-- EXPLICATION -->
+    <div class="explain-box">
+        <h4>Pourquoi cette page ?</h4>
+        <p>
+            Cette page permet a l'administrateur d'ajouter manuellement les <strong>numeros confirmes a 100% comme fraudes</strong>
+            (suite a une enquete, une plainte client, un rapport de l'operateur, etc.).<br><br>
+            Ces fraudes confirmees serviront plus tard a <strong>re-entrainer le modele XGBoost</strong> avec des
+            <strong>vrais labels</strong> (pas seulement des pseudo-labels generes par les regles).<br>
+            C'est l'etape <strong>"Human-in-the-Loop"</strong> qui rend le systeme intelligent et evolutif.
+        </p>
+    </div>
+
+    <!-- FORMULAIRE D'AJOUT -->
+    <div class="card" style="margin-bottom:25px;">
+        <h3 style="color:#e67e22; margin-bottom:18px;">Ajouter une fraude confirmee</h3>
+        <form id="form-fraude" onsubmit="ajouterFraude(event)">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="msisdn">MSISDN (numero confirme fraude)</label>
+                    <input type="text" id="msisdn" placeholder="Ex: +21698139995" required>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="source">Source de confirmation</label>
+                    <select id="source" class="form-select">
+                        <option value="Enquete interne">Enquete interne</option>
+                        <option value="Plainte client">Plainte client</option>
+                        <option value="Rapport operateur">Rapport operateur</option>
+                        <option value="Verification terrain">Verification terrain</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="commentaire">Commentaire (optionnel)</label>
+                <textarea id="commentaire" rows="3" placeholder="Details sur l'investigation, contexte..."
+                    style="width:100%; padding:12px; border:1px solid #e0e0e0; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
+            </div>
+            <button type="submit" class="btn-launch" style="background:linear-gradient(135deg, #e74c3c, #c0392b);">
+                Ajouter a la liste des fraudes confirmees
+            </button>
+        </form>
+    </div>
+
+    <!-- LISTE DES FRAUDES CONFIRMEES -->
+    <div class="card">
+        <div class="table-header">
+            <div class="table-stats">
+                <span class="badge" id="badge-count" style="background:#e67e22;">--</span> fraudes confirmees manuellement
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>MSISDN</th>
+                        <th>Source</th>
+                        <th>Commentaire</th>
+                        <th>Ajoute par</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="fraudes-body">
+                    <tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", chargerFraudes);
+
+async function chargerFraudes() {
+    const res = await fetch("/api/fraudes-confirmees");
+    const d = await res.json();
+
+    document.getElementById("badge-count").textContent = d.total;
+    const tbody = document.getElementById("fraudes-body");
+    tbody.innerHTML = "";
+
+    if (d.fraudes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">
+            Aucune fraude confirmee manuellement pour l'instant. Ajoutez-en une avec le formulaire ci-dessus.
+        </td></tr>`;
+        return;
+    }
+
+    d.fraudes.forEach((f, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="rank">${i + 1}</td>
+            <td><strong>${f.msisdn}</strong></td>
+            <td><span class="status-tag pending" style="background:#fff3cd; color:#e67e22;">${f.source}</span></td>
+            <td style="font-size:12px; color:#666; max-width:300px;">${f.commentaire || '<i>aucun</i>'}</td>
+            <td>${f.ajoute_par}</td>
+            <td style="font-size:12px;">${f.date_ajout}</td>
+            <td>
+                <button class="btn-reject" onclick="supprimer(${f.id}, '${f.msisdn}')" title="Supprimer">&#10008;</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function ajouterFraude(e) {
+    e.preventDefault();
+    const msisdn = document.getElementById("msisdn").value.trim();
+    const source = document.getElementById("source").value;
+    const commentaire = document.getElementById("commentaire").value.trim();
+
+    const res = await fetch("/api/fraudes-confirmees", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({msisdn, source, commentaire})
+    });
+    const d = await res.json();
+
+    if (d.success) {
+        alert(`Fraude confirmee ajoutee : ${msisdn}`);
+        document.getElementById("form-fraude").reset();
+        chargerFraudes();
+    } else {
+        alert("Erreur: " + (d.error || "inconnue"));
+    }
+}
+
+async function supprimer(id, msisdn) {
+    if (!confirm(`Supprimer la fraude confirmee ${msisdn} ?`)) return;
+
+    const res = await fetch(`/api/fraudes-confirmees/${id}`, {method: "DELETE"});
+    const d = await res.json();
+
+    if (d.success) {
+        chargerFraudes();
+    } else {
+        alert("Erreur: " + (d.error || "inconnue"));
+    }
+}
+</script>
+{% endblock %}

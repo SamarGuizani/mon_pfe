@@ -31,6 +31,9 @@
     <a href="/liste-noire" class="sidebar-link {% if active == 'liste_noire' %}active{% endif %}">
         <span class="icon">&#128211;</span> Liste Noire
     </a>
+    <a href="/liste-noire-train" class="sidebar-link {% if active == 'liste_noire_train' %}active{% endif %}">
+        <span class="icon">&#127942;</span> Liste Noire Train
+    </a>
 
     <div class="sidebar-section">ANALYSE</div>
     <a href="/graphiques" class="sidebar-link {% if active == 'graphiques' %}active{% endif %}">
@@ -42,6 +45,9 @@
 
     {% if current_user.is_admin %}
     <div class="sidebar-section">ADMINISTRATION</div>
+    <a href="/verification-manuelle" class="sidebar-link {% if active == 'verification_manuelle' %}active{% endif %}">
+        <span class="icon">&#9989;</span> Verification Manuelle
+    </a>
     <a href="/users" class="sidebar-link {% if active == 'users' %}active{% endif %}">
         <span class="icon">&#128101;</span> Gestion Utilisateurs
     </a>

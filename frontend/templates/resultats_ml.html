@@ -148,7 +148,41 @@
         <!-- Resume -->
         <div class="test-summary" id="test-summary"></div>
     </div>
+
+    <!-- LISTE DES SUSPECTS DU TEST (apparait apres evaluation) -->
+    <div class="card" style="margin-top:20px;">
+        <div class="table-header">
+            <div>
+                <h3 style="color:var(--primary); font-size:17px; font-weight:700;">Liste Noire - Fraudes detectees sur le Test</h3>
+                <div class="subtitle" style="color:var(--gray-500); font-size:13px; margin-top:4px;">
+                    Ces numeros n'ont JAMAIS ete vus par le modele pendant l'entrainement
+                </div>
+            </div>
+            <input type="text" id="search-test" placeholder="Rechercher un MSISDN..." onkeyup="searchTestSuspects()"
+                   style="background:white; border:1px solid var(--gray-200); padding:9px 16px; border-radius:var(--radius); width:260px; font-family:inherit; font-size:13px; outline:none;">
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>MSISDN</th>
+                        <th>Proba IA</th>
+                        <th>Sortants</th>
+                        <th>Entrants</th>
+                        <th>Var. MO %</th>
+                        <th>Locations</th>
+                        <th>Heures</th>
+                        <th>IMEI</th>
+                    </tr>
+                </thead>
+                <tbody id="test-suspects-body"></tbody>
+            </table>
+        </div>
+        <div class="pagination" id="test-pagination"></div>
+    </div>
 </section>
+
 
 <!-- EXPLICATION VERIFICATION -->
 <section id="explain-verify" class="page-content" style="display:none;">
@@ -242,6 +276,7 @@ async function lancerTest() {
 
     document.getElementById("test-results").style.display = "block";
     document.getElementById("explain-verify").style.display = "block";
+    loadTestSuspects(1);
     document.getElementById("test-results").scrollIntoView({ behavior: "smooth" });
 
     btn.textContent = "Relancer l'evaluation";
@@ -249,5 +284,65 @@ async function lancerTest() {
 }
 
 function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
+
+// ============================================================
+// CHARGER LES SUSPECTS DU TEST (apres evaluation)
+// ============================================================
+let testCurrentPage = 1;
+const testPerPage = 15;
+
+async function loadTestSuspects(page) {
+    testCurrentPage = page;
+    const search = document.getElementById("search-test").value;
+    const res = await fetch(`/api/suspects-test?page=${page}&per_page=${testPerPage}&search=${search}`);
+    const data = await res.json();
+
+    const tbody = document.getElementById("test-suspects-body");
+    tbody.innerHTML = "";
+
+    data.suspects.forEach((s, i) => {
+        const rank = (page - 1) * testPerPage + i + 1;
+        const proba = (s.xgb_proba * 100);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="rank">${rank}</td>
+            <td><strong>${s.msisdn}</strong></td>
+            <td class="${proba >= 90 ? 'high-danger' : 'medium-danger'}" style="font-weight:700;">${proba.toFixed(1)}%</td>
+            <td>${fmt(s.appels_sortants)}</td>
+            <td>${fmt(s.appels_entrants)}</td>
+            <td class="${s.variance_sortants >= 85 ? 'high-danger' : ''}">${s.variance_sortants.toFixed(1)}%</td>
+            <td class="${s.location_count <= 3 ? 'high-danger' : ''}">${s.location_count}</td>
+            <td class="${s.active_hours <= 3 ? 'high-danger' : ''}">${s.active_hours}</td>
+            <td class="${s.distinct_imei >= 3 ? 'high-danger' : ''}">${s.distinct_imei}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    renderTestPagination(data.page, data.pages);
+}
+
+function renderTestPagination(current, total) {
+    const div = document.getElementById("test-pagination");
+    div.innerHTML = "";
+    if (current > 1) addTestBtn(div, "Precedent", () => loadTestSuspects(current - 1));
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+    if (start > 1) { addTestBtn(div, "1", () => loadTestSuspects(1)); addTestDots(div); }
+    for (let i = start; i <= end; i++) {
+        const btn = addTestBtn(div, i, () => loadTestSuspects(i));
+        if (i === current) btn.className = "active";
+    }
+    if (end < total) { addTestDots(div); addTestBtn(div, total, () => loadTestSuspects(total)); }
+    if (current < total) addTestBtn(div, "Suivant", () => loadTestSuspects(current + 1));
+}
+
+function addTestBtn(p, t, fn) { const b = document.createElement("button"); b.textContent = t; b.onclick = fn; p.appendChild(b); return b; }
+function addTestDots(p) { const s = document.createElement("span"); s.textContent = "..."; s.style.cssText = "color:#999;padding:0 5px;"; p.appendChild(s); }
+
+let searchTestTimeout;
+function searchTestSuspects() {
+    clearTimeout(searchTestTimeout);
+    searchTestTimeout = setTimeout(() => loadTestSuspects(1), 400);
+}
 </script>
 {% endblock %}
