@@ -21,6 +21,26 @@
             <input type="text" id="search-input" placeholder="Rechercher un MSISDN..."
                    onkeyup="searchSuspects()">
         </div>
+
+        <!-- FILTRES -->
+        <div class="filter-bar">
+            <span class="filter-label">Trier par :</span>
+            <button class="filter-btn active" id="f-default" onclick="setFilter('default')">
+                Par defaut (sortants)
+            </button>
+            <button class="filter-btn" id="f-min_duree" onclick="setFilter('min_duree')">
+                Min duree sortants
+                <span class="filter-hint">(plus courts en haut)</span>
+            </button>
+            <button class="filter-btn" id="f-max_variance" onclick="setFilter('max_variance')">
+                Max variance sortants
+                <span class="filter-hint">(plus eleves en haut)</span>
+            </button>
+            <button class="filter-btn danger" id="f-both" onclick="setFilter('both')">
+                Les plus suspects
+                <span class="filter-hint">(min duree + max variance)</span>
+            </button>
+        </div>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -61,7 +81,15 @@
 <script>
 const IS_ADMIN = {{ 'true' if current_user.is_admin else 'false' }};
 let currentPage = 1;
+let currentFilter = "default";
 const perPage = 20;
+
+function setFilter(type) {
+    currentFilter = type;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("f-" + type).classList.add("active");
+    loadSuspects(1);
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     loadSuspects(1);
@@ -83,7 +111,7 @@ async function loadVerifStats() {
 async function loadSuspects(page) {
     currentPage = page;
     const search = document.getElementById("search-input").value;
-    const res = await fetch(`/api/suspects?page=${page}&per_page=${perPage}&search=${search}`);
+    const res = await fetch(`/api/suspects?page=${page}&per_page=${perPage}&search=${search}&filter=${currentFilter}`);
     const data = await res.json();
 
     document.getElementById("badge-total").textContent = fmt(data.total);

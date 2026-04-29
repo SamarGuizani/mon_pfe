@@ -33,14 +33,16 @@ login_manager.login_view = "page_login"
 
 # Charger le modele XGBoost au demarrage
 print("  Chargement du modele XGBoost...")
-model_xgb = joblib.load("../models/xgboost_fraud.pkl")
+model_xgb = joblib.load("../models/xgboost_fraud_v3.pkl")
 
 FEATURES = [
-    "nombre_appels", "duree_totale_sec", "duree_moyenne",
-    "ratio_appels_courts", "nb_destinataires_uniques",
-    "nb_imei_utilises", "nb_cellules_uniques", "nb_lac_uniques",
-    "nb_jours_actifs", "appels_par_jour", "heures_activite_totale",
-    "ratio_appels_sortants"
+    "appels_sortants", "appels_entrants",
+    "duree_sortants", "duree_entrants",
+    "avg_duree_sortants", "avg_duree_entrants",
+    "variance_sortants", "variance_entrants",
+    "location_count", "location_count_sortants", "location_count_entrants",
+    "active_hours", "distinct_imei",
+    "unique_called", "unique_calling", "nb_jours_actifs"
 ]
 
 
@@ -451,12 +453,17 @@ def api_suspects_test():
 
 
 # API pour les metriques V2
+@app.route("/api/metrics-v3")
+@login_required
+def api_metrics_v3_alias():
+    return api_metrics_v3()
+
 @app.route("/api/metrics-v2")
 @login_required
-def api_metrics_v2():
+def api_metrics_v3():
     import json
     try:
-        with open("../data/metrics_v2.json") as f:
+        with open("../data/metrics_v3.json") as f:
             return jsonify(json.load(f))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -476,22 +483,25 @@ def api_fraudes_confirmees():
         msisdn = data.get("msisdn", "").strip()
         source = data.get("source", "").strip()
         commentaire = data.get("commentaire", "").strip()
+        type_entree = data.get("type", "fraude").strip()  # 'fraude' ou 'faux_positif'
 
         if not msisdn:
             return jsonify({"error": "MSISDN requis"}), 400
+        if type_entree not in ("fraude", "faux_positif"):
+            type_entree = "fraude"
 
         with engine.begin() as conn:
             conn.execute(text("""
-                INSERT INTO fraudes_confirmees_manuelle (msisdn, source, commentaire, ajoute_par)
-                VALUES (:m, :s, :c, :u)
-            """), {"m": msisdn, "s": source, "c": commentaire, "u": current_user.username})
+                INSERT INTO fraudes_confirmees_manuelle (msisdn, source, commentaire, ajoute_par, type)
+                VALUES (:m, :s, :c, :u, :t)
+            """), {"m": msisdn, "s": source, "c": commentaire, "u": current_user.username, "t": type_entree})
 
         return jsonify({"success": True})
 
-    # GET : liste des fraudes confirmees
+    # GET : liste des fraudes confirmees + faux positifs
     with engine.connect() as conn:
         r = conn.execute(text("""
-            SELECT id, msisdn, source, commentaire, ajoute_par, date_ajout
+            SELECT id, msisdn, source, commentaire, ajoute_par, date_ajout, COALESCE(type, 'fraude') AS type
             FROM fraudes_confirmees_manuelle
             ORDER BY date_ajout DESC
         """))
@@ -501,10 +511,31 @@ def api_fraudes_confirmees():
         "fraudes": [{
             "id": row[0], "msisdn": row[1], "source": row[2] or "",
             "commentaire": row[3] or "", "ajoute_par": row[4],
-            "date_ajout": str(row[5])[:19]
+            "date_ajout": str(row[5])[:19],
+            "type": row[6]
         } for row in rows],
         "total": len(rows)
     })
+
+
+@app.route("/api/suspects-suggestions")
+@login_required
+def api_suspects_suggestions():
+    """Suggere les TOP suspects de la liste noire (pour autocomplete)"""
+    with engine.connect() as conn:
+        r = conn.execute(text("""
+            SELECT msisdn, appels_sortants, variance_sortants, location_count, distinct_imei
+            FROM liste_noire_fraude
+            ORDER BY appels_sortants DESC
+            LIMIT 50
+        """))
+        return jsonify([{
+            "msisdn": row[0],
+            "appels_sortants": row[1],
+            "variance_sortants": float(row[2] or 0),
+            "location_count": row[3],
+            "distinct_imei": row[4]
+        } for row in r.fetchall()])
 
 
 @app.route("/api/fraudes-confirmees/<int:fid>", methods=["DELETE"])
@@ -626,15 +657,17 @@ def api_stats():
         r = conn.execute(text("SELECT COUNT(*) FROM liste_noire_fraude"))
         total_suspects = r.fetchone()[0]
         r = conn.execute(text("""
-            SELECT ROUND(AVG(nombre_appels)::numeric,0), ROUND(AVG(appels_sortants)::numeric,0),
-                   ROUND(AVG(appels_entrants)::numeric,0), ROUND(AVG(avg_duree_sortants)::numeric,1),
-                   ROUND(AVG(distinct_locations)::numeric,0)
+            SELECT ROUND(AVG(appels_sortants + appels_entrants)::numeric,0),
+                   ROUND(AVG(appels_sortants)::numeric,0),
+                   ROUND(AVG(appels_entrants)::numeric,0),
+                   ROUND(AVG(avg_duree_sortants)::numeric,1),
+                   ROUND(AVG(location_count)::numeric,0)
             FROM features_msisdn_v2
         """))
         stats = r.fetchone()
     return jsonify({
         "total_msisdn": total_msisdn, "total_suspects": total_suspects,
-        "taux_fraude": round(100 * total_suspects / total_msisdn, 2),
+        "taux_fraude": round(100 * total_suspects / total_msisdn, 4),
         "avg_appels": float(stats[0] or 0), "avg_sortants": float(stats[1] or 0),
         "avg_entrants": float(stats[2] or 0), "avg_duree_sortants": float(stats[3] or 0),
         "avg_locations": float(stats[4] or 0)
@@ -643,15 +676,21 @@ def api_stats():
 @app.route("/api/ml-info")
 @login_required
 def api_ml_info():
+    """Lit les metriques V3 directement (pas de fichier CSV)"""
+    import json
     try:
-        train = pd.read_csv("../data/train_labeled.csv")
-        test = pd.read_csv("../data/test_labeled.csv")
+        with open("../data/metrics_v3.json") as f:
+            m = json.load(f)
         return jsonify({
-            "train_total": len(train), "train_fraude": int(train["label_fraude"].sum()),
-            "train_normal": int((train["label_fraude"] == 0).sum()), "train_pct": 70,
-            "test_total": len(test), "test_fraude": int(test["label_fraude"].sum()),
-            "test_normal": int((test["label_fraude"] == 0).sum()), "test_pct": 30,
-            "features": FEATURES, "model_name": "XGBoost", "status": "pret"
+            "train_total": m["train_size"],
+            "train_fraude": m["train_fraudes"],
+            "train_normal": m["train_size"] - m["train_fraudes"],
+            "train_pct": 70,
+            "test_total": m["test_size"],
+            "test_fraude": m["test_fraudes"],
+            "test_normal": m["test_size"] - m["test_fraudes"],
+            "test_pct": 30,
+            "features": FEATURES, "model_name": "XGBoost V3", "status": "pret"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -659,26 +698,20 @@ def api_ml_info():
 @app.route("/api/run-test", methods=["POST"])
 @login_required
 def api_run_test():
+    """Retourne les metriques V3 deja calculees (rapide)"""
+    import json
     try:
-        test = pd.read_csv("../data/test_labeled.csv")
-        X_test = test[FEATURES].fillna(0)
-        y_test = test["label_fraude"]
-        y_pred = model_xgb.predict(X_test)
-        y_proba = model_xgb.predict_proba(X_test)[:, 1]
-        cm = confusion_matrix(y_test, y_pred)
-        report = classification_report(y_test, y_pred, output_dict=True)
-        auc = float(roc_auc_score(y_test, y_proba))
+        with open("../data/metrics_v3.json") as f:
+            m = json.load(f)
         return jsonify({
-            "total_test": len(test),
-            "confusion_matrix": {"vrai_negatif": int(cm[0][0]), "faux_positif": int(cm[0][1]),
-                                 "faux_negatif": int(cm[1][0]), "vrai_positif": int(cm[1][1])},
-            "precision": round(report["1"]["precision"], 4),
-            "recall": round(report["1"]["recall"], 4),
-            "f1": round(report["1"]["f1-score"], 4),
-            "accuracy": round(report["accuracy"], 4),
-            "auc": round(auc, 4),
-            "fraudes_detectees": int(y_pred.sum()),
-            "fraudes_reelles": int(y_test.sum()), "status": "termine"
+            "total_test": m["test_size"],
+            "confusion_matrix": m["confusion_matrix"],
+            "precision": round(m["precision"], 4),
+            "recall": round(m["recall"], 4),
+            "f1": round(m["f1"], 4),
+            "auc": round(m["auc"], 4),
+            "fraudes_detectees": m["fraudes_detectees_test"],
+            "fraudes_reelles": m["test_fraudes"], "status": "termine"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -692,10 +725,14 @@ def api_predict_msisdn():
         return jsonify({"error": "MSISDN vide"}), 400
     with engine.connect() as conn:
         r = conn.execute(text("""
-            SELECT nombre_appels, duree_totale_sec, duree_moyenne, ratio_appels_courts,
-                   nb_destinataires_uniques, nb_imei_utilises, nb_cellules_uniques, nb_lac_uniques,
-                   nb_jours_actifs, appels_par_jour, heures_activite_totale, ratio_appels_sortants
-            FROM features_msisdn WHERE msisdn = :msisdn
+            SELECT appels_sortants, appels_entrants,
+                   duree_sortants, duree_entrants,
+                   avg_duree_sortants, avg_duree_entrants,
+                   variance_sortants, variance_entrants,
+                   location_count, location_count_sortants, location_count_entrants,
+                   active_hours, distinct_imei,
+                   unique_called, unique_calling, nb_jours_actifs
+            FROM features_msisdn_v2 WHERE msisdn = :msisdn
         """), {"msisdn": msisdn})
         row = r.fetchone()
     if not row:
@@ -705,18 +742,9 @@ def api_predict_msisdn():
     X = np.array([feature_values])
     prediction = int(model_xgb.predict(X)[0])
     proba_fraude = float(model_xgb.predict_proba(X)[0][1])
-    anomalies = {}
-    try:
-        train = pd.read_csv("../data/train_labeled.csv")
-        for feat in FEATURES:
-            mean, std = train[feat].mean(), train[feat].std()
-            if std > 0 and abs(feature_dict[feat] - mean) > 2 * std:
-                anomalies[feat] = "eleve" if feature_dict[feat] > mean else "bas"
-    except Exception:
-        pass
     return jsonify({"msisdn": msisdn, "prediction": "Fraude" if prediction == 1 else "Normal",
                      "probabilite_fraude": round(proba_fraude * 100, 2),
-                     "features": feature_dict, "anomalies": anomalies})
+                     "features": feature_dict, "anomalies": {}})
 
 @app.route("/api/suspects")
 @login_required
@@ -724,7 +752,23 @@ def api_suspects():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 20, type=int)
     search = request.args.get("search", "", type=str)
+    filter_type = request.args.get("filter", "default", type=str)
     offset = (page - 1) * per_page
+
+    # Determiner le tri selon le filtre
+    if filter_type == "min_duree":
+        # Min duree sortants = les appels les plus courts (robots/SIM Box)
+        order_by = "ORDER BY avg_duree_sortants ASC, appels_sortants DESC"
+    elif filter_type == "max_variance":
+        # Max variance sortants = appelle beaucoup de numeros differents
+        order_by = "ORDER BY variance_sortants DESC, appels_sortants DESC"
+    elif filter_type == "both":
+        # Les 2 combines : calcul d'un score de suspicion
+        # Plus la duree est courte ET plus la variance est haute → plus suspect
+        order_by = "ORDER BY (variance_sortants - avg_duree_sortants) DESC, appels_sortants DESC"
+    else:
+        order_by = "ORDER BY appels_sortants DESC"
+
     with engine.connect() as conn:
         where, params = "", {"limit": per_page, "offset": offset}
         if search:
@@ -740,7 +784,7 @@ def api_suspects():
                    location_count, location_count_sortants, location_count_entrants,
                    active_hours, distinct_imei,
                    unique_called, unique_calling, nb_jours_actifs, date_detection
-            FROM liste_noire_fraude {where} ORDER BY appels_sortants DESC LIMIT :limit OFFSET :offset
+            FROM liste_noire_fraude {where} {order_by} LIMIT :limit OFFSET :offset
         """), params)
         suspects = [{
             "msisdn": row[0],
@@ -775,10 +819,16 @@ def api_top_suspects():
 def api_distribution():
     with engine.connect() as conn:
         r = conn.execute(text("""
-            SELECT CASE WHEN nombre_appels<=10 THEN '1-10' WHEN nombre_appels<=50 THEN '11-50'
-                        WHEN nombre_appels<=100 THEN '51-100' WHEN nombre_appels<=500 THEN '101-500'
-                        WHEN nombre_appels<=1000 THEN '501-1000' ELSE '1000+' END AS tranche, COUNT(*) AS nb
-            FROM features_msisdn_v2 GROUP BY 1 ORDER BY MIN(nombre_appels)
+            SELECT CASE WHEN appels_sortants<=10 THEN '1-10'
+                        WHEN appels_sortants<=50 THEN '11-50'
+                        WHEN appels_sortants<=100 THEN '51-100'
+                        WHEN appels_sortants<=500 THEN '101-500'
+                        WHEN appels_sortants<=1000 THEN '501-1000'
+                        ELSE '1000+' END AS tranche, COUNT(*) AS nb
+            FROM features_msisdn_v2
+            WHERE appels_sortants > 0
+            GROUP BY 1
+            ORDER BY MIN(appels_sortants)
         """))
         return jsonify([{"tranche": row[0], "count": row[1]} for row in r.fetchall()])
 
