@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% set active = "assistant_sql" %}
+{% block title %}Assistant SQL - SIM Box Fraud Detection{% endblock %}
+
+{% block head %}
+<style>
+    .sql-result-card { margin-top: 20px; }
+    .sql-code-box {
+        position: relative;
+        background: #0f1b2d;
+        border: 1px solid #1f3350;
+        border-radius: 10px;
+        padding: 18px 18px 18px 18px;
+        margin: 12px 0;
+        overflow-x: auto;
+    }
+    .sql-code-box pre {
+        margin: 0;
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #7ee0c0;
+        white-space: pre;
+    }
+    .btn-copy {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1f3350;
+        color: #e0e6ed;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .btn-copy:hover { background: #2a4368; }
+    .sql-explication {
+        background: #f4f7fb;
+        border-left: 4px solid #10b981;
+        border-radius: 6px;
+        padding: 12px 16px;
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .chip {
+        background: #eef2f7;
+        border: 1px solid #d6deea;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-size: 13px;
+        color: #334155;
+        cursor: pointer;
+        transition: all .15s;
+    }
+    .chip:hover { background: #10b981; color: #fff; border-color: #10b981; }
+    .sql-suggestions { margin-top: 16px; }
+    .sql-suggestions h4 { color: #64748b; font-size: 13px; margin-bottom: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h2>Assistant SQL</h2>
+    <p>Pose ta question en francais (avec des conditions si tu veux), je construis la commande SQL pour pgAdmin</p>
+</section>
+
+<!-- QUESTION -->
+<section class="predict-section">
+    <div class="card predict-search-card">
+        <div class="predict-input-group">
+            <input type="text" id="question-input" class="predict-input"
+                   placeholder="Ex: la commande pour lister les numeros suspects"
+                   onkeydown="if(event.key==='Enter') demander()">
+            <button class="btn-predict" onclick="demander()">Demander</button>
+        </div>
+        <p class="predict-hint">Astuce : tu peux ecrire une condition chiffree, ex : "suspects avec plus de 500 appels sortants". Exemples (clique pour essayer) :</p>
+        <div class="chips" id="exemple-chips">
+            <span class="chip" onclick="exemple(this)">Lister les numeros suspects</span>
+            <span class="chip" onclick="exemple(this)">Combien de numeros suspects ?</span>
+            <span class="chip" onclick="exemple(this)">Telecharger la liste noire en CSV</span>
+            <span class="chip" onclick="exemple(this)">Suspects avec plus de 500 appels sortants</span>
+            <span class="chip" onclick="exemple(this)">Suspects avec variance superieure a 90</span>
+            <span class="chip" onclick="exemple(this)">Numeros avec moins de 3 cellules</span>
+            <span class="chip" onclick="exemple(this)">Les 50 numeros les plus suspects</span>
+            <span class="chip" onclick="exemple(this)">Voir les statistiques moyennes</span>
+            <span class="chip" onclick="exemple(this)">Voir toutes les tables de la base</span>
+            <span class="chip" onclick="exemple(this)">La taille des tables</span>
+        </div>
+    </div>
+</section>
+
+<!-- ERREUR -->
+<div id="sql-error" class="pred-error" style="display:none;"></div>
+
+<!-- RESULTAT -->
+<section id="sql-result" class="predict-section" style="display:none;">
+    <div class="card sql-result-card">
+        <h3 id="sql-titre" style="color:#0f766e; margin-bottom:6px;"></h3>
+        <div class="sql-code-box">
+            <button class="btn-copy" onclick="copierSql()">Copier</button>
+            <pre id="sql-code"></pre>
+        </div>
+        <div class="sql-explication" id="sql-explication"></div>
+        <div class="sql-suggestions" id="sql-suggestions" style="display:none;">
+            <h4>Tu cherchais peut-etre aussi :</h4>
+            <div class="chips" id="suggestions-chips"></div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exemple(el) {
+    document.getElementById("question-input").value = el.textContent;
+    demander();
+}
+
+async function demander() {
+    const question = document.getElementById("question-input").value.trim();
+    if (!question) return;
+
+    document.getElementById("sql-error").style.display = "none";
+    document.getElementById("sql-result").style.display = "none";
+
+    const res = await fetch("/api/assistant-sql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question })
+    });
+    const d = await res.json();
+
+    if (d.error || d.trouve === false) {
+        const errDiv = document.getElementById("sql-error");
+        errDiv.textContent = d.error || d.message;
+        errDiv.style.display = "block";
+        return;
+    }
+
+    document.getElementById("sql-titre").textContent = d.titre;
+    document.getElementById("sql-code").textContent = d.sql;
+    document.getElementById("sql-explication").textContent = d.explication;
+
+    const sugBox = document.getElementById("sql-suggestions");
+    const sugChips = document.getElementById("suggestions-chips");
+    sugChips.innerHTML = "";
+    if (d.suggestions && d.suggestions.length > 0) {
+        d.suggestions.forEach(function (s) {
+            const chip = document.createElement("span");
+            chip.className = "chip";
+            chip.textContent = s;
+            chip.onclick = function () { exemple(chip); };
+            sugChips.appendChild(chip);
+        });
+        sugBox.style.display = "block";
+    } else {
+        sugBox.style.display = "none";
+    }
+
+    document.getElementById("sql-result").style.display = "block";
+    document.getElementById("sql-result").scrollIntoView({ behavior: "smooth" });
+}
+
+function copierSql() {
+    const code = document.getElementById("sql-code").textContent;
+    navigator.clipboard.writeText(code).then(function () {
+        const btn = document.querySelector(".btn-copy");
+        const ancien = btn.textContent;
+        btn.textContent = "Copie !";
+        setTimeout(function () { btn.textContent = ancien; }, 1500);
+    });
+}
+</script>
+{% endblock %}

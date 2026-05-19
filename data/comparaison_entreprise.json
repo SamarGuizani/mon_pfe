@@ -1,0 +1,9 @@
+{
+  "entreprise_total": 207,
+  "modele_detecte": 210,
+  "en_commun": 106,
+  "manques": 101,
+  "en_plus": 104,
+  "precision": 0.5048,
+  "recall": 0.5121
+}

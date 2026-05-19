@@ -1,0 +1,34 @@
+{
+  "XGBoost V2": {
+    "modele": "XGBoost V2",
+    "nb_numeros": 3971333,
+    "suspects_regle": 41986,
+    "suspects_modele": 42112,
+    "precision": 0.9969,
+    "recall": 0.9999,
+    "f1": 0.9984,
+    "auc": 1.0,
+    "confusion_matrix": {
+      "vrai_negatif": 3929217,
+      "faux_positif": 130,
+      "faux_negatif": 4,
+      "vrai_positif": 41982
+    }
+  },
+  "XGBoost V3": {
+    "modele": "XGBoost V3",
+    "nb_numeros": 3971333,
+    "suspects_regle": 41986,
+    "suspects_modele": 210,
+    "precision": 0.2048,
+    "recall": 0.001,
+    "f1": 0.002,
+    "auc": 0.3422,
+    "confusion_matrix": {
+      "vrai_negatif": 3929180,
+      "faux_positif": 167,
+      "faux_negatif": 41943,
+      "vrai_positif": 43
+    }
+  }
+}

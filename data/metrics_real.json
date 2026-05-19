@@ -1,0 +1,27 @@
+{
+  "train_size": 2779933,
+  "train_fraudes": 146,
+  "test_size": 1191400,
+  "test_fraudes": 62,
+  "fraudes_detectees_test": 23072,
+  "precision": 0.0023,
+  "recall": 0.8548,
+  "f1": 0.0046,
+  "auc": 0.9953,
+  "confusion_matrix": {
+    "vrai_negatif": 1168319,
+    "faux_positif": 23019,
+    "faux_negatif": 9,
+    "vrai_positif": 53
+  },
+  "best_threshold": 0.9985,
+  "best_threshold_precision": 0.5375,
+  "best_threshold_recall": 0.6935,
+  "best_threshold_f1": 0.6056,
+  "best_threshold_detected": 80,
+  "best_threshold_confusion": {
+    "vrai_positif": 43,
+    "faux_positif": 37,
+    "faux_negatif": 19
+  }
+}

@@ -1,0 +1,7 @@
+Verification cell 412-54312 sur donnees fresh
+=========================================
+
+Cell active : 962 numeros (total 4,585 MO)
+Numeros respectant regle stricte : 141
+Sur les 207 entreprise, 99 sont dans cette cell
+Sur les 210 fresh, 114 sont dans cette cell

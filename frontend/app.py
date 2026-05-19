@@ -32,8 +32,9 @@ login_manager.init_app(app)
 login_manager.login_view = "page_login"
 
 # Charger le modele XGBoost au demarrage
-print("  Chargement du modele XGBoost...")
-model_xgb = joblib.load("../models/xgboost_fraud_v3.pkl")
+# V2 = modele retenu : prouve sur les donnees fresh (F1 = 0.998 sur un mois neuf)
+print("  Chargement du modele XGBoost V2...")
+model_xgb = joblib.load("../models/xgboost_fraud_v2.pkl")
 
 FEATURES = [
     "appels_sortants", "appels_entrants",
@@ -463,7 +464,7 @@ def api_metrics_v3_alias():
 def api_metrics_v3():
     import json
     try:
-        with open("../data/metrics_v3.json") as f:
+        with open("../data/metrics_v2.json") as f:
             return jsonify(json.load(f))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -679,7 +680,7 @@ def api_ml_info():
     """Lit les metriques V3 directement (pas de fichier CSV)"""
     import json
     try:
-        with open("../data/metrics_v3.json") as f:
+        with open("../data/metrics_v2.json") as f:
             m = json.load(f)
         return jsonify({
             "train_total": m["train_size"],
@@ -690,7 +691,7 @@ def api_ml_info():
             "test_fraude": m["test_fraudes"],
             "test_normal": m["test_size"] - m["test_fraudes"],
             "test_pct": 30,
-            "features": FEATURES, "model_name": "XGBoost V3", "status": "pret"
+            "features": FEATURES, "model_name": "XGBoost V2", "status": "pret"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -701,7 +702,7 @@ def api_run_test():
     """Retourne les metriques V3 deja calculees (rapide)"""
     import json
     try:
-        with open("../data/metrics_v3.json") as f:
+        with open("../data/metrics_v2.json") as f:
             m = json.load(f)
         return jsonify({
             "total_test": m["test_size"],
@@ -715,6 +716,182 @@ def api_run_test():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/test-fresh")
+@login_required
+def page_test_fresh():
+    return render_template("test_fresh.html")
+
+
+@app.route("/api/metrics-fresh")
+@login_required
+def api_metrics_fresh():
+    """Resultats du test independant sur les donnees fresh (mai 2026)"""
+    import json
+    try:
+        with open("../data/metrics_fresh.json") as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/comparaison-entreprise")
+@login_required
+def api_comparaison_entreprise():
+    """Comparaison reelle : modele vs liste de l'entreprise (207 vrais)"""
+    import json
+    try:
+        with open("../data/comparaison_entreprise.json") as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/metrics-real")
+@login_required
+def api_metrics_real():
+    """Metriques du modele re-entraine sur les vrais labels"""
+    import json
+    try:
+        with open("../data/metrics_real.json") as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/imei")
+@login_required
+def page_imei():
+    return render_template("imei.html")
+
+
+@app.route("/api/imei-stats")
+@login_required
+def api_imei_stats():
+    """Statistiques globales sur les IMEI des numeros suspects"""
+    try:
+        with engine.connect() as conn:
+            r = conn.execute(text("""
+                SELECT COUNT(*), COUNT(DISTINCT msisdn),
+                       COUNT(DISTINCT imei), COUNT(DISTINCT imsi)
+                FROM numero_imei
+            """))
+            total, n_msisdn, n_imei, n_imsi = r.fetchone()
+            r = conn.execute(text("""
+                SELECT COUNT(*) FROM (
+                    SELECT imei FROM numero_imei
+                    WHERE imei IS NOT NULL AND imei != ''
+                    GROUP BY imei
+                    HAVING COUNT(DISTINCT msisdn) > 1
+                ) t
+            """))
+            shared = r.fetchone()[0]
+        return jsonify({"ready": True, "total": int(total),
+                         "msisdn": int(n_msisdn), "imei": int(n_imei),
+                         "imsi": int(n_imsi), "imei_partages": int(shared)})
+    except Exception as e:
+        return jsonify({"ready": False, "message": str(e)})
+
+
+@app.route("/api/imei-partages")
+@login_required
+def api_imei_partages():
+    """IMEI utilises par plusieurs MSISDN (= SIM Box)"""
+    try:
+        with engine.connect() as conn:
+            r = conn.execute(text("""
+                SELECT imei,
+                       COUNT(DISTINCT msisdn) AS nb_msisdn,
+                       SUM(nb_appels) AS total_appels,
+                       STRING_AGG(DISTINCT msisdn, ', ') AS msisdns
+                FROM numero_imei
+                WHERE imei IS NOT NULL AND imei != ''
+                GROUP BY imei
+                HAVING COUNT(DISTINCT msisdn) > 1
+                ORDER BY nb_msisdn DESC, total_appels DESC
+                LIMIT 100
+            """))
+            rows = [{"imei": row[0], "nb_msisdn": int(row[1]),
+                     "total_appels": int(row[2]), "msisdns": row[3]}
+                    for row in r.fetchall()]
+        return jsonify({"ready": True, "imei_partages": rows})
+    except Exception:
+        return jsonify({"ready": False, "imei_partages": []})
+
+
+@app.route("/api/imei-tous")
+@login_required
+def api_imei_tous():
+    """Tous les couples MSISDN - IMEI (avec pagination)"""
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    search = request.args.get("search", "", type=str)
+    offset = (page - 1) * per_page
+    try:
+        with engine.connect() as conn:
+            where, params = "", {"limit": per_page, "offset": offset}
+            if search:
+                where = "WHERE msisdn LIKE :search OR imei LIKE :search"
+                params["search"] = f"%{search}%"
+            r = conn.execute(text(f"SELECT COUNT(*) FROM numero_imei {where}"), params)
+            total = r.fetchone()[0]
+            r = conn.execute(text(f"""
+                SELECT msisdn, imei, imsi, nb_appels, premier_appel, dernier_appel
+                FROM numero_imei {where}
+                ORDER BY msisdn, nb_appels DESC
+                LIMIT :limit OFFSET :offset
+            """), params)
+            rows = [{
+                "msisdn": row[0], "imei": row[1] or "", "imsi": row[2] or "",
+                "nb_appels": int(row[3] or 0),
+                "premier": str(row[4])[:10] if row[4] else "",
+                "dernier": str(row[5])[:10] if row[5] else ""
+            } for row in r.fetchall()]
+        return jsonify({"ready": True, "total": total, "rows": rows,
+                         "page": page, "pages": (total + per_page - 1) // per_page})
+    except Exception:
+        return jsonify({"ready": False, "total": 0, "rows": [], "page": 1, "pages": 0})
+
+
+@app.route("/api/suspects-fresh")
+@login_required
+def api_suspects_fresh():
+    """Les numeros suspects detectes par le modele sur les donnees fresh"""
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 15, type=int)
+    search = request.args.get("search", "", type=str)
+    offset = (page - 1) * per_page
+    with engine.connect() as conn:
+        where, params = "", {"limit": per_page, "offset": offset}
+        if search:
+            where = "WHERE msisdn LIKE :search"
+            params["search"] = f"%{search}%"
+        r = conn.execute(text(f"SELECT COUNT(*) FROM liste_noire_fresh {where}"), params)
+        total = r.fetchone()[0]
+        r = conn.execute(text(f"""
+            SELECT msisdn, appels_sortants, appels_entrants,
+                   variance_sortants, variance_entrants,
+                   location_count, distinct_imei,
+                   active_hours, nb_jours_actifs, xgb_proba
+            FROM liste_noire_fresh {where}
+            ORDER BY xgb_proba DESC
+            LIMIT :limit OFFSET :offset
+        """), params)
+        suspects = [{
+            "msisdn": row[0],
+            "appels_sortants": int(row[1] or 0),
+            "appels_entrants": int(row[2] or 0),
+            "variance_sortants": float(row[3] or 0),
+            "variance_entrants": float(row[4] or 0),
+            "location_count": int(row[5] or 0),
+            "distinct_imei": int(row[6] or 0),
+            "active_hours": int(row[7] or 0),
+            "nb_jours_actifs": int(row[8] or 0),
+            "xgb_proba": float(row[9] or 0),
+        } for row in r.fetchall()]
+    return jsonify({"suspects": suspects, "total": total, "page": page,
+                    "pages": (total + per_page - 1) // per_page})
+
 
 @app.route("/api/predict-msisdn", methods=["POST"])
 @login_required
@@ -837,6 +1014,307 @@ def api_distribution():
 def api_current_user():
     return jsonify({"username": current_user.username, "role": current_user.role,
                      "email": current_user.email, "is_admin": current_user.is_admin})
+
+
+# ============================================================
+# ASSISTANT SQL : base de connaissances + construction de requetes
+# ============================================================
+import unicodedata
+import re
+
+
+def _normaliser_texte(txt):
+    """Minuscule + suppression des accents pour comparer les mots-cles"""
+    txt = (txt or "").lower().strip()
+    txt = unicodedata.normalize("NFD", txt)
+    return "".join(c for c in txt if unicodedata.category(c) != "Mn")
+
+
+# Colonnes numeriques reconnues pour les filtres sur-mesure (mot -> colonne SQL)
+COLONNES_SQL = [
+    ("variance_sortants", ["variance"]),
+    ("distinct_imei", ["imei"]),
+    ("location_count", ["cellule", "cellules", "location", "position", "localisation", "lieu"]),
+    ("nb_jours_actifs", ["jours actifs", "jours"]),
+    ("active_hours", ["heures actives", "heures"]),
+    ("appels_entrants", ["appels entrants", "entrants", "entrant"]),
+    ("appels_sortants", ["appels sortants", "sortants", "sortant", "appels", "appel"]),
+    ("unique_called", ["numeros appeles", "destinataires"]),
+]
+
+
+def _detecter_colonne(q):
+    for colonne, mots in COLONNES_SQL:
+        if any(m in q for m in mots):
+            return colonne
+    return None
+
+
+def _detecter_operateur(q):
+    if any(w in q for w in ["plus de", "superieur", "superieure", "au dessus", "depasse",
+                            "au moins", "minimum", "elevee", "eleve", "grand", ">"]):
+        return ">"
+    if any(w in q for w in ["moins de", "inferieur", "inferieure", "en dessous",
+                            "maximum", "petit", "faible", "<"]):
+        return "<"
+    if any(w in q for w in ["egal", "exactement", "vaut", "="]):
+        return "="
+    return None
+
+
+def construire_filtre_dynamique(q):
+    """Construit une requete SQL sur-mesure si la question contient une condition chiffree."""
+    op = _detecter_operateur(q)
+    col = _detecter_colonne(q)
+    if not op or not col:
+        return None
+    nombres = [n for n in re.findall(r"\d+", q) if len(n) <= 6]
+    if not nombres:
+        return None
+    seuil = nombres[0]
+    if any(w in q for w in ["suspect", "fraude", "noire", "fraudeur"]):
+        table = "liste_noire_fraude"
+    else:
+        table = "features_msisdn_v2"
+    sql = (f"SELECT msisdn, {col}\n"
+           f"FROM {table}\n"
+           f"WHERE {col} {op} {seuil}\n"
+           f"ORDER BY {col} DESC;")
+    return {
+        "titre": f"Filtre sur-mesure : {col} {op} {seuil}",
+        "sql": sql,
+        "explication": (f"Requete construite a partir de TA question : affiche les numeros de la table "
+                        f"{table} dont la colonne {col} est {op} {seuil}, du plus grand au plus petit. "
+                        f"Tu peux changer la colonne, le signe ou le nombre directement dans pgAdmin.")
+    }
+
+
+SQL_INTENTS = [
+    {
+        "titre": "Lister tous les numeros suspects",
+        "priorite": -1,
+        "keywords": ["lister", "liste", "afficher", "voir", "montrer", "numero", "suspect", "fraude", "fraudeur", "tous"],
+        "sql": "SELECT * FROM liste_noire_fraude\nORDER BY appels_sortants DESC;",
+        "explication": "Affiche tous les numeros detectes comme suspects (table liste_noire_fraude), du plus actif au moins actif."
+    },
+    {
+        "titre": "Compter le nombre de numeros suspects",
+        "keywords": ["compter", "combien", "nombre", "count", "quantite", "suspect", "fraude"],
+        "sql": "SELECT COUNT(*) AS nb_suspects FROM liste_noire_fraude;",
+        "explication": "Donne le nombre total de numeros presents dans la liste noire."
+    },
+    {
+        "titre": "Telecharger / exporter la liste noire en fichier CSV",
+        "keywords": ["telecharger", "exporter", "export", "download", "csv", "fichier", "enregistrer", "sauvegarder", "extraire", "telechargement"],
+        "sql": "COPY (SELECT * FROM liste_noire_fraude)\nTO 'C:\\Users\\Public\\liste_noire.csv'\nWITH (FORMAT CSV, HEADER, ENCODING 'UTF8');",
+        "explication": "COPY ... TO ecrit un fichier CSV sur le PC ou tourne PostgreSQL (Windows). Choisis un dossier accessible comme C:\\Users\\Public. ASTUCE pgAdmin : tu peux aussi lancer un SELECT, puis cliquer le bouton 'Download as CSV' (raccourci F8) au-dessus du resultat."
+    },
+    {
+        "titre": "Voir les 20 numeros les plus suspects",
+        "keywords": ["top", "plus", "pire", "premiers", "classement", "ranking", "actifs", "suspect"],
+        "sql": "SELECT msisdn, appels_sortants, variance_sortants, location_count, distinct_imei\nFROM liste_noire_fraude\nORDER BY appels_sortants DESC\nLIMIT 20;",
+        "explication": "Affiche les 20 numeros les plus actifs de la liste noire (les plus suspects)."
+    },
+    {
+        "titre": "Voir les features d'un numero precis",
+        "keywords": ["feature", "features", "profil", "caracteristique", "caracteristiques"],
+        "sql": "SELECT * FROM features_msisdn_v2\nWHERE msisdn = '21690493475';",
+        "explication": "Affiche les 16 features calculees pour un numero. Remplace 21690493475 par le numero voulu."
+    },
+    {
+        "titre": "Compter le nombre total de numeros analyses",
+        "keywords": ["compter", "combien", "nombre", "total", "analyses", "analyse", "msisdn", "numero"],
+        "sql": "SELECT COUNT(*) AS nb_numeros FROM features_msisdn_v2;",
+        "explication": "Donne le nombre total de numeros analyses (table features_msisdn_v2)."
+    },
+    {
+        "titre": "Voir un echantillon de la table CDR brute",
+        "keywords": ["cdr", "brute", "brutes", "echantillon", "donnees", "raw", "lignes", "ligne"],
+        "sql": "SELECT * FROM cdr_data\nLIMIT 100;",
+        "explication": "Affiche les 100 premieres lignes des donnees CDR brutes. On met LIMIT pour ne pas charger 741M lignes."
+    },
+    {
+        "titre": "Compter le nombre total d'appels (CDR)",
+        "keywords": ["compter", "combien", "nombre", "total", "appels", "appel"],
+        "sql": "SELECT COUNT(*) AS nb_appels FROM cdr_data;",
+        "explication": "Donne le nombre total d'appels CDR dans la base (long sur 741M lignes)."
+    },
+    {
+        "titre": "Voir tous les appels d'un numero dans les CDR",
+        "keywords": ["appels", "appel", "msisdn"],
+        "sql": "SELECT * FROM cdr_data\nWHERE msisdn = '21690493475'\nORDER BY \"timestamp\"\nLIMIT 200;",
+        "explication": "Affiche les appels d'un numero precis dans les CDR. Remplace 21690493475 par le numero voulu."
+    },
+    {
+        "titre": "Lister la liste noire d'entrainement (train)",
+        "keywords": ["train", "entrainement", "apprentissage"],
+        "sql": "SELECT * FROM liste_noire_train;",
+        "explication": "Affiche les fraudes utilisees pour l'entrainement du modele (70%)."
+    },
+    {
+        "titre": "Lister la liste noire de test",
+        "keywords": ["test", "evaluation"],
+        "sql": "SELECT * FROM liste_noire_test\nORDER BY xgb_proba DESC;",
+        "explication": "Affiche les fraudes detectees par le modele sur le test (30%), triees par probabilite."
+    },
+    {
+        "titre": "Voir la taille des tables (espace disque)",
+        "keywords": ["taille", "poids", "espace", "disque", "size", "memoire", "lourde", "lourd"],
+        "sql": "SELECT relname AS table_nom,\n       pg_size_pretty(pg_total_relation_size(relid)) AS taille\nFROM pg_catalog.pg_statio_user_tables\nORDER BY pg_total_relation_size(relid) DESC;",
+        "explication": "Affiche chaque table avec sa taille sur le disque, de la plus grosse a la plus petite."
+    },
+    {
+        "titre": "Voir toutes les tables de la base",
+        "keywords": ["tables", "schema", "base", "existe", "toutes"],
+        "sql": "SELECT tablename FROM pg_tables\nWHERE schemaname = 'public'\nORDER BY tablename;",
+        "explication": "Affiche la liste de toutes les tables de ta base de donnees."
+    },
+    {
+        "titre": "Voir les utilisateurs du site",
+        "keywords": ["utilisateur", "utilisateurs", "user", "users", "compte", "comptes", "admin", "analyst"],
+        "sql": "SELECT id, email, username, role, is_verified\nFROM users\nORDER BY id;",
+        "explication": "Affiche les comptes utilisateurs du dashboard (admin et analyst)."
+    },
+    {
+        "titre": "Supprimer une table",
+        "keywords": ["supprimer", "effacer", "delete", "drop", "detruire", "enlever"],
+        "sql": "DROP TABLE IF EXISTS nom_de_la_table;",
+        "explication": "Supprime une table. ATTENTION : c'est irreversible. Remplace nom_de_la_table par le vrai nom."
+    },
+    {
+        "titre": "Voir les statistiques moyennes des numeros",
+        "keywords": ["moyenne", "moyennes", "moyen", "statistique", "statistiques", "stats"],
+        "sql": "SELECT ROUND(AVG(appels_sortants)::numeric, 1) AS moy_sortants,\n       ROUND(AVG(appels_entrants)::numeric, 1) AS moy_entrants,\n       ROUND(AVG(variance_sortants)::numeric, 1) AS moy_variance\nFROM features_msisdn_v2;",
+        "explication": "Calcule les moyennes (appels sortants, entrants, variance) sur tous les numeros analyses."
+    },
+    {
+        "titre": "Voir les suspects qui utilisent plusieurs IMEI",
+        "keywords": ["plusieurs imei", "multi imei", "imei multiple", "boitier", "boitiers"],
+        "sql": "SELECT msisdn, distinct_imei, appels_sortants\nFROM liste_noire_fraude\nWHERE distinct_imei >= 2\nORDER BY distinct_imei DESC;",
+        "explication": "Affiche les suspects qui ont utilise au moins 2 IMEI differents (signe typique d'une SIM Box)."
+    },
+    {
+        "titre": "Voir les colonnes (structure) d'une table",
+        "keywords": ["colonnes", "colonne", "structure", "champs", "decrire"],
+        "sql": "SELECT column_name, data_type\nFROM information_schema.columns\nWHERE table_name = 'liste_noire_fraude';",
+        "explication": "Affiche les colonnes et leurs types pour une table. Remplace liste_noire_fraude par la table voulue."
+    },
+    {
+        "titre": "Voir l'historique des connexions au site",
+        "keywords": ["connexion", "connexions", "login", "deconnexion", "historique"],
+        "sql": "SELECT * FROM login_history\nORDER BY id DESC\nLIMIT 100;",
+        "explication": "Affiche les 100 dernieres connexions et actions des utilisateurs du dashboard."
+    },
+    {
+        "titre": "Voir les fraudes confirmees manuellement",
+        "keywords": ["confirmee", "confirmees", "confirme", "manuelle", "manuel", "validee", "verifiee"],
+        "sql": "SELECT * FROM fraudes_confirmees_manuelle\nORDER BY date_ajout DESC;",
+        "explication": "Affiche les numeros que l'admin a confirmes manuellement comme fraude (vrais labels)."
+    },
+    {
+        "titre": "Vider une table (garder la table vide)",
+        "keywords": ["vider", "vide", "truncate", "nettoyer"],
+        "sql": "TRUNCATE TABLE nom_de_la_table;",
+        "explication": "Supprime TOUTES les lignes d'une table mais garde la table (vide). Remplace nom_de_la_table."
+    },
+    {
+        "titre": "Renommer une table",
+        "keywords": ["renommer", "renomme", "rename"],
+        "sql": "ALTER TABLE ancien_nom\nRENAME TO nouveau_nom;",
+        "explication": "Change le nom d'une table. Remplace ancien_nom et nouveau_nom par les vrais noms."
+    },
+    {
+        "titre": "Copier une table dans une nouvelle table",
+        "keywords": ["copier", "copie", "dupliquer", "duplique"],
+        "sql": "CREATE TABLE copie_de_la_table AS\nSELECT * FROM table_source;",
+        "explication": "Cree une nouvelle table identique a une table existante. Pratique avant une modification risquee."
+    },
+    {
+        "titre": "Voir la version de PostgreSQL",
+        "keywords": ["version", "postgresql"],
+        "sql": "SELECT version();",
+        "explication": "Affiche la version exacte de PostgreSQL installee."
+    },
+]
+
+
+def chercher_sql(question):
+    """Retourne les intents correspondants, tries par score puis priorite"""
+    q = _normaliser_texte(question)
+    resultats = []
+    for intent in SQL_INTENTS:
+        score = sum(1 for kw in intent["keywords"] if kw in q)
+        if score > 0:
+            resultats.append((score, intent.get("priorite", 0), intent))
+    resultats.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return resultats
+
+
+@app.route("/assistant-sql")
+@login_required
+def page_assistant_sql():
+    return render_template("assistant_sql.html")
+
+
+@app.route("/api/assistant-sql", methods=["POST"])
+@login_required
+def api_assistant_sql():
+    question = request.get_json().get("question", "")
+    if not question.strip():
+        return jsonify({"error": "Pose une question."}), 400
+
+    q = _normaliser_texte(question)
+
+    # 1. Requete sur-mesure si la question contient une condition chiffree
+    filtre = construire_filtre_dynamique(q)
+
+    # 2. Recherche par mots-cles dans la base de connaissances
+    resultats = chercher_sql(question)
+
+    # 3. Un MSISDN tape par l'utilisateur (suite de 8 chiffres ou plus)
+    msisdn = next((n for n in re.findall(r"\d+", q) if len(n) >= 8), None)
+    if msisdn:
+        # remonter les intents qui travaillent sur un numero precis
+        resultats.sort(key=lambda r: ("21690493475" in r[2]["sql"], r[0], r[1]), reverse=True)
+
+    if not filtre and not resultats:
+        if msisdn:
+            filtre = {
+                "titre": "Voir les features de ce numero",
+                "sql": "SELECT * FROM features_msisdn_v2\nWHERE msisdn = '21690493475';",
+                "explication": "Affiche les 16 features calculees pour le numero que tu as tape."
+            }
+        else:
+            return jsonify({
+                "trouve": False,
+                "message": "Je n'ai pas bien compris. Essaie avec des mots comme : lister, compter, "
+                           "telecharger, filtrer, suspects, appels, variance, imei, tables, taille... "
+                           "ou clique un exemple.",
+                "exemples": [i["titre"] for i in SQL_INTENTS]
+            })
+
+    if filtre:
+        best = filtre
+        suggestions = [r[2]["titre"] for r in resultats[:3]]
+    else:
+        best = resultats[0][2]
+        suggestions = [r[2]["titre"] for r in resultats[1:4]]
+
+    # 4. Personnaliser la requete avec ce que l'utilisateur a tape
+    sql = best["sql"]
+    if msisdn:
+        sql = sql.replace("21690493475", msisdn)
+    petits = [n for n in re.findall(r"\d+", q) if 1 <= len(n) <= 4]
+    if petits and "LIMIT " in sql:
+        sql = re.sub(r"LIMIT \d+", "LIMIT " + petits[0], sql)
+
+    return jsonify({
+        "trouve": True,
+        "titre": best["titre"],
+        "sql": sql,
+        "explication": best["explication"],
+        "suggestions": suggestions
+    })
 
 
 if __name__ == "__main__":

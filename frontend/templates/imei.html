@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% set active = "imei" %}
+{% block title %}IMEI des Suspects - SIM Box Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>IMEI des numeros suspects</h1>
+        <div class="subtitle">La "carte d'identite" materielle - une SIM Box = un IMEI</div>
+    </div>
+</div>
+
+<div class="page-content">
+
+<!-- EXPLICATION -->
+<div class="explain-box">
+    <h4>C'est quoi un IMEI ?</h4>
+    <p>
+        L'<strong>IMEI</strong> (International Mobile Equipment Identity) est l'identifiant
+        <strong>UNIQUE du materiel</strong> (le boitier electronique). Il ne change pas, meme si on
+        change la carte SIM.<br><br>
+        <strong>Detection automatique de SIM Box :</strong> si plusieurs numeros (MSISDN) utilisent
+        le <strong>MEME IMEI</strong>, ils sont dans le <strong>meme boitier physique</strong>
+        -> c'est une SIM Box. Tout NOUVEAU numero utilisant cet IMEI peut etre <strong>bloque
+        automatiquement</strong> car il appartient a la meme machine.
+    </p>
+</div>
+
+<!-- STATS GLOBALES -->
+<div class="card">
+    <h3>Statistiques</h3>
+    <div id="stats-loading" style="text-align:center; padding:30px; color:#666;">
+        Chargement... (si l'extraction tourne encore, recharge dans quelques minutes)
+    </div>
+    <div id="stats-ready" class="ml-stats" style="display:none;">
+        <div class="ml-stat">
+            <span class="ml-stat-value" id="stat-msisdn">--</span>
+            <span class="ml-stat-label">MSISDN suspects</span>
+        </div>
+        <div class="ml-stat">
+            <span class="ml-stat-value" id="stat-imei">--</span>
+            <span class="ml-stat-label">IMEI distincts</span>
+        </div>
+        <div class="ml-stat">
+            <span class="ml-stat-value" id="stat-imsi">--</span>
+            <span class="ml-stat-label">IMSI (cartes SIM) distincts</span>
+        </div>
+        <div class="ml-stat">
+            <span class="ml-stat-value danger" id="stat-partages">--</span>
+            <span class="ml-stat-label">IMEI partages = SIM Box</span>
+        </div>
+    </div>
+</div>
+
+<!-- IMEI PARTAGES (LE PLUS IMPORTANT) -->
+<div class="card">
+    <div class="table-header">
+        <div>
+            <h3 style="color:var(--primary); font-size:17px; font-weight:700;">
+                IMEI partages par plusieurs numeros (SIM Box detectees)
+            </h3>
+            <div class="subtitle" style="color:var(--gray-500); font-size:13px; margin-top:4px;">
+                Ces IMEI sont utilises par plusieurs MSISDN -> meme boitier physique -> SIM Box certaine
+            </div>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>IMEI (boitier)</th>
+                    <th>Nb MSISDN</th>
+                    <th>Total appels</th>
+                    <th>MSISDN concernees</th>
+                </tr>
+            </thead>
+            <tbody id="partages-body">
+                <tr><td colspan="4" style="text-align:center; color:#999; padding:30px;">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- TOUS LES COUPLES MSISDN-IMEI -->
+<div class="card">
+    <div class="table-header">
+        <div>
+            <h3 style="color:var(--primary); font-size:17px; font-weight:700;">
+                Tous les couples MSISDN <-> IMEI
+            </h3>
+            <div class="subtitle" style="color:var(--gray-500); font-size:13px; margin-top:4px;">
+                Pour chaque numero suspect, les IMEI et IMSI qu'il utilise
+            </div>
+        </div>
+        <input type="text" id="search-imei" placeholder="Rechercher MSISDN ou IMEI..." onkeyup="searchImei()"
+               style="background:white; border:1px solid var(--gray-200); padding:9px 16px;
+                      border-radius:var(--radius); width:260px; font-family:inherit; font-size:13px; outline:none;">
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>MSISDN</th>
+                    <th>IMEI</th>
+                    <th>IMSI</th>
+                    <th>Nb appels</th>
+                    <th>1er appel</th>
+                    <th>Dernier appel</th>
+                </tr>
+            </thead>
+            <tbody id="imei-body">
+                <tr><td colspan="7" style="text-align:center; color:#999; padding:30px;">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination" id="imei-pagination"></div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function fmt(n) { return new Intl.NumberFormat("fr-FR").format(n); }
+
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Stats
+    try {
+        const r = await fetch("/api/imei-stats");
+        const d = await r.json();
+        if (d.ready) {
+            document.getElementById("stat-msisdn").textContent = fmt(d.msisdn);
+            document.getElementById("stat-imei").textContent = fmt(d.imei);
+            document.getElementById("stat-imsi").textContent = fmt(d.imsi);
+            document.getElementById("stat-partages").textContent = fmt(d.imei_partages);
+            document.getElementById("stats-loading").style.display = "none";
+            document.getElementById("stats-ready").style.display = "flex";
+        } else {
+            document.getElementById("stats-loading").innerHTML =
+                "<strong>L'extraction des IMEI tourne encore</strong> sur cdr_data (83 Go) -- " +
+                "ca prend du temps. Recharge dans 15-30 min, la page se remplira automatiquement.";
+        }
+    } catch (e) {}
+
+    // 2. IMEI partages
+    try {
+        const r = await fetch("/api/imei-partages");
+        const d = await r.json();
+        const tbody = document.getElementById("partages-body");
+        tbody.innerHTML = "";
+        if (!d.ready || d.imei_partages.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999; padding:30px;">Pas encore de donnees (extraction en cours).</td></tr>';
+        } else {
+            d.imei_partages.forEach(p => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><code style="font-size:13px;"><strong>${p.imei}</strong></code></td>
+                    <td class="high-danger" style="font-weight:700; font-size:16px;">${p.nb_msisdn}</td>
+                    <td>${fmt(p.total_appels)}</td>
+                    <td style="font-size:11px; max-width:500px; word-break:break-all; color:#555;">${p.msisdns}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    } catch (e) {}
+
+    // 3. Liste tous
+    loadImei(1);
+});
+
+let imeiCurrentPage = 1;
+async function loadImei(page) {
+    imeiCurrentPage = page;
+    const search = document.getElementById("search-imei").value;
+    const r = await fetch(`/api/imei-tous?page=${page}&per_page=20&search=${search}`);
+    const d = await r.json();
+    const tbody = document.getElementById("imei-body");
+    tbody.innerHTML = "";
+    if (!d.ready || d.rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#999; padding:30px;">Pas encore de donnees (extraction en cours).</td></tr>';
+        return;
+    }
+    d.rows.forEach((row, i) => {
+        const rank = (page - 1) * 20 + i + 1;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="rank">${rank}</td>
+            <td><strong>${row.msisdn}</strong></td>
+            <td><code style="font-size:11px;">${row.imei || '-'}</code></td>
+            <td><code style="font-size:11px;">${row.imsi || '-'}</code></td>
+            <td>${fmt(row.nb_appels)}</td>
+            <td>${row.premier}</td>
+            <td>${row.dernier}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    renderImeiPagination(d.page, d.pages);
+}
+
+function renderImeiPagination(current, total) {
+    const div = document.getElementById("imei-pagination");
+    div.innerHTML = "";
+    if (current > 1) addBtn(div, "Precedent", () => loadImei(current - 1));
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+    if (start > 1) { addBtn(div, "1", () => loadImei(1)); addDots(div); }
+    for (let i = start; i <= end; i++) {
+        const btn = addBtn(div, i, () => loadImei(i));
+        if (i === current) btn.className = "active";
+    }
+    if (end < total) { addDots(div); addBtn(div, total, () => loadImei(total)); }
+    if (current < total) addBtn(div, "Suivant", () => loadImei(current + 1));
+}
+function addBtn(p, t, fn) { const b = document.createElement("button"); b.textContent = t; b.onclick = fn; p.appendChild(b); return b; }
+function addDots(p) { const s = document.createElement("span"); s.textContent = "..."; s.style.cssText = "color:#999;padding:0 5px;"; p.appendChild(s); }
+
+let searchTimer;
+function searchImei() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadImei(1), 400);
+}
+</script>
+{% endblock %}
