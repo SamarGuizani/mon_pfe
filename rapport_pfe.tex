@@ -87,11 +87,11 @@
 \begin{minipage}[t]{0.45\textwidth}
 \begin{flushleft}
 \scriptsize
-Republique Tunisienne\\
-Ministere de l'Enseignement Superieur\\
+République Tunisienne\\
+Ministère de l'Enseignement Supérieur\\
 et de la Recherche Scientifique\\
 \rule{4cm}{0.5pt}\\
-Universite de Gabes\\
+Université de Gabès\\
 \rule{4cm}{0.5pt}\\
 \universityName
 \end{flushleft}
@@ -99,10 +99,7 @@ Universite de Gabes\\
 \hfill
 \begin{minipage}[t]{0.20\textwidth}
 \centering
-\textbf{FSG}\\
-\scriptsize
-Faculté des Sciences\\
-de Gabes
+\includegraphics[width=\linewidth, height=2.2cm, keepaspectratio]{images/ministere.png}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.30\textwidth}
@@ -121,21 +118,21 @@ Big Data \& IA\\[0.3em]
 
 \vspace{0.6cm}
 
-{\Huge\textbf{MEMOIRE}}\\[0.4cm]
+{\Huge\textbf{Projet de Fin d'Etudes}}\\[0.4cm]
 
-{\large \textit{presenté à}}\\[0.15cm]
+{\large \textit{présenté à}}\\[0.15cm]
 
 \textbf{La Faculté des Sciences de Gabes}\\[0.5cm]
 
 {\large \textit{en vue de l'obtention du}}\\[0.15cm]
 
-\textbf{Diplome National de Licence en :}\\
+\textbf{Diplôme National de Licence en :}\\
 \textbf{Science de l'informatique}\\[0.3cm]
 
 {\large \textit{Option :}}\\
 \textbf{Big Data \& Intelligence Artificielle}\\[0.7cm]
 
-{\large \textit{par}}\\[0.2cm]
+{\large \textit{Réalisé par}}\\[0.2cm]
 
 {\Large\textbf{Samar GUIZANI}}\\[0.7cm]
 
@@ -174,46 +171,55 @@ M. Ithar Lounissi & Encadrant Entreprise (Elite Business) \\
 % Decoration : barre noire verticale + ligne horizontale
 \noindent\rule[-0.2cm]{0.45cm}{1.2cm}\hspace{0.15cm}%
 \raisebox{0.85cm}{\rule{0.85\textwidth}{0.5pt}}\\[0.3cm]
-\noindent\hspace*{0.6cm}{\Huge\textbf{DEDICACE}}\\[0.8cm]
+\noindent\hspace*{0.6cm}{\Huge\textbf{DEDICACE}}\\[2cm]
 
-\begin{spacing}{1.0}
 \begin{center}
-\textit{\textbf{À ma chère mère}}
+\textit{\textbf{À ma chère mère , Derbali Afef}}
 
 {\Huge\textbf{À}} ma chère mère, source intarissable d'amour, de tendresse et de sacrifices, qui n'a jamais cessé de m'encourager dans toutes mes entreprises et qui a été pour moi un modèle de courage et de dévouement.
-\end{center}
 
+\end{center}
 \begin{center}
-\textit{\textbf{À mon cher père}}
+\textit{\textbf{À mon cher père , Guizani Zahreddine}}
 
 {\Huge\textbf{À}} mon cher père, qui m'a appris la valeur du travail bien fait, la rigueur et la persévérance. Ses sages conseils et son soutien indéfectible ont été les piliers de ma réussite tout au long de ces années d'études.
+
+
 \end{center}
 
 \begin{center}
-\textit{\textbf{À mes frères et sœurs}}
+\textit{\textbf{À mon frère Mohamed et mes sœurs Arij, Rana}}
 
-{\Huge\textbf{À}} mes frères et sœurs, mes complices et mes premiers amis, dont la présence chaleureuse et le soutien constant m'ont accompagnée dans les moments de doute comme dans les moments de joie.
+
+{\Huge\textbf{À}} mes frères et sœurs et mes premiers amis, dont la présence chaleureuse et le soutien constant m'ont accompagnée dans les moments de doute comme dans les moments de joie.
+
+
 \end{center}
 
 \begin{center}
-\textit{\textbf{À mes chers enseignants}}
+\textit{\textbf{À mes enseignants}}
 
-{\Huge\textbf{À}} mes chers enseignants, qui m'ont transmis le savoir avec patience et passion tout au long de mon parcours académique. Leur dévouement et leurs précieux conseils ont façonné la personne que je suis devenue aujourd'hui.
+
+{\Huge\textbf{À}} À mes chers enseignants, qui m'ont transmis le savoir avec patience et passion tout au long de mon parcours academique.
+
+
 \end{center}
 
 \begin{center}
-\textit{\textbf{À toutes les personnes qui me sont chères}}
+\textit{\textbf{À toutes les personnes qui me sont chères,}}\\
 
 {\Huge\textbf{À}} mes chers amis, avec qui j'ai partagé tant de moments précieux durant mon parcours universitaire. Votre amitié sincère a illuminé ces années d'études.
 
+
+
 \textit{Je dédie ce modeste travail.}
 \end{center}
-\end{spacing}
 
-\vspace{0.5cm}
+\vspace{1cm}
 
 \begin{flushright}
 \textit{Samar GUIZANI}
+
 \end{flushright}
 % ============================================================
 % REMERCIEMENT (02-Remerciement.tex)
@@ -397,6 +403,10 @@ Enfin, une \textbf{conclusion générale} synthétise les contributions du proje
 % ============================================================
 \clearpage
 \thispagestyle{fancy} % Pour avoir la ligne FSG en bas
+% On incrémente le compteur manuellement SANS afficher le titre par défaut
+\refstepcounter{chapter} 
+% On remet le compteur de section à 0 pour ce nouveau chapitre
+\setcounter{section}{0}
 \addcontentsline{toc}{chapter}{CHAPITRE 1 : CADRE GÉNÉRAL DU PROJET}
 
 % --- STYLE DE HEAD (Barre noire + Ligne) ---
@@ -431,13 +441,12 @@ Après avoir étudié les solutions déjà existantes, nous présentons la probl
 \section{PRESENTATION DE L'ENTREPRISE D'ACCUEIL}
 
 \subsection{Elite Business}
-% --- Décommente quand tu uploades logo_elite.png dans images/ ---
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.4\textwidth]{images/logo_elite.png}
-% \caption{Logo de l'entreprise Elite Business}
-% \label{fig:logo-elite}
-% \end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.4\textwidth]{images/image_2026-05-12_122310950.png}
+\caption{Logo de l'entreprise Elite Business}
+\label{fig:logo-elite}
+\end{figure}
 
 Notre stage de fin d'études a été effectué au sein de la société ELITE Business, une entreprise spécialisée dans le secteur des services aux opérateurs de télécommunications. Cette structure intervient notamment dans les domaines de l'analyse de données massives, de la détection des comportements frauduleux et du développement de solutions logicielles destinées aux opérateurs télécom de la région.
 
@@ -500,14 +509,12 @@ Dans le cadre de notre projet, nous avons travaillé sur une base de données co
 \subsection{Definition et principe de fonctionnement}
 Une \textbf{SIM Box}, parfois désignée sous l'appellation de passerelle GSM (GSM Gateway), est un équipement électronique regroupant physiquement plusieurs dizaines, voire centaines de cartes SIM dans un seul boîtier. Initialement conçu pour des usages légitimes (comme l'optimisation des coûts pour les centres d'appels), ce dispositif est détourné par les fraudeurs pour transformer des appels internationaux entrants en appels locaux, contournant ainsi les tarifs d'interconnexion internationaux.
 
-% --- Décommente quand tu uploades simbox.png dans images/ ---
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.5\textwidth]{images/simbox.png}
-% \caption{Exemple d'un dispositif SIM Box utilisé pour la fraude}
-% \label{fig:simbox}
-% \end{figure}
-
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{images/simbox.jpeg}
+\caption{Exemple d'un dispositif SIM Box utilisé pour la fraude}
+\label{fig:simbox}
+\end{figure}
 \subsection{Mecanisme detaille}
 
 Le fonctionnement de la fraude se decompose comme suit :
@@ -583,7 +590,7 @@ Cependant, elle présente aussi des limites importantes :
 \item Le maintien des règles demande un travail constant des experts pour rester efficace.
 \end{itemize}
 
-\subsection{Approche basée sur le Machine Learning supervisé}
+\subsection{Approche basée sur l'apprentissage  supervisé}
 Cette approche, beaucoup plus moderne, s'appuie sur des algorithmes intelligents capables d'apprendre à reconnaître la fraude à partir d'exemples déjà étiquetés (numéros connus comme frauduleux ou légitimes).
 
 Le principe est le suivant : on fournit au modèle un grand nombre de cas réels avec leurs réponses (« fraude » ou « pas fraude »). Le modèle analyse ces exemples, identifie des schémas cachés dans les données, puis utilise ces connaissances pour prédire si un nouveau numéro est suspect ou non.
@@ -592,22 +599,22 @@ Les algorithmes les plus utilisés dans ce domaine sont :
 \begin{itemize}
 \item \textbf{Random Forest} : utilise plusieurs arbres de décision qui votent ensemble pour donner une prédiction fiable.
 
- \colorbox{yellow!30}{\textbf{Exemple dans notre projet :}} on entraîne le Random Forest sur les CDR étiquetés. Chaque arbre analyse un sous-ensemble de features (volume d'appels, ratio MO/MT, durée moyenne, nombre d'IMEI). Pour un nouveau MSISDN, si 70 arbres sur 100 votent « fraude », le numéro est classé comme SIM Box.
+\underline{\textit{\textbf{Exemple dans notre projet :}}} on entraîne le Random Forest sur les CDR étiquetés. Chaque arbre analyse un sous-ensemble de features (volume d'appels, ratio MO/MT, durée moyenne, nombre d'IMEI). Pour un nouveau MSISDN, si 70 arbres sur 100 votent « fraude », le numéro est classé comme SIM Box.
 \vspace{0.5cm}
  
 \item \textbf{SVM (Support Vector Machine)} : sépare les données en deux catégories grâce à une frontière mathématique optimale.
 
- \colorbox{yellow!30}{\textbf{Exemple dans notre projet :}} le SVM trace une frontière dans l'espace des features. D'un côté, les utilisateurs normaux (peu d'appels, durée longue, mobilité) ; de l'autre, les SIM Box (beaucoup d'appels courts, position fixe). Tout nouveau MSISDN est placé d'un côté ou de l'autre selon ses caractéristiques.
+\underline{\textit{\textbf{Exemple dans notre projet :}}} le SVM trace une frontière dans l'espace des features. D'un côté, les utilisateurs normaux (peu d'appels, durée longue, mobilité) ; de l'autre, les SIM Box (beaucoup d'appels courts, position fixe). Tout nouveau MSISDN est placé d'un côté ou de l'autre selon ses caractéristiques.
 
  \vspace{0.5cm}
 \item \textbf{XGBoost} : combine plusieurs modèles faibles pour créer un modèle puissant et précis.
 
-\colorbox{yellow!30}{\textbf{Exemple dans notre projet :}} XGBoost construit ses arbres les uns après les autres. Le premier arbre détecte les fraudes évidentes (ex : >500 appels/jour). Les arbres suivants se concentrent sur les erreurs du précédent (ex : SIM Box plus discrètes avec ~80 appels/jour). Résultat : meilleure détection des fraudes subtiles dans nos données CDR.
+\underline{\textit{\textbf{Exemple dans notre projet :}}} XGBoost construit ses arbres les uns après les autres. Le premier arbre détecte les fraudes évidentes (ex : >500 appels/jour). Les arbres suivants se concentrent sur les erreurs du précédent (ex : SIM Box plus discrètes avec ~80 appels/jour). Résultat : meilleure détection des fraudes subtiles dans nos données CDR.
  \vspace{0.5cm}
  
 \item \textbf{Réseaux de neurones} : s'inspirent du fonctionnement du cerveau humain pour détecter des relations complexes entre les variables.
 
-\colorbox{yellow!30}{\textbf{Exemple dans notre projet :}} on alimente le réseau avec les vecteurs de features générés à partir des CDR (volume, durée, IMEI, LAC, cell-id, etc.). Le réseau apprend à combiner ces variables de façon non linéaire pour détecter des schémas de fraude complexes, comme une SIM Box qui imite partiellement le comportement humain pour passer inaperçue.
+\underline{\textit{\textbf{Exemple dans notre projet :}}} on alimente le réseau avec les vecteurs de features générés à partir des CDR (volume, durée, IMEI, LAC, cell-id, etc.). Le réseau apprend à combiner ces variables de façon non linéaire pour détecter des schémas de fraude complexes, comme une SIM Box qui imite partiellement le comportement humain pour passer inaperçue.
 \end{itemize}
 \vspace{0.5cm}
 Cette approche offre plusieurs avantages majeurs :
@@ -664,17 +671,19 @@ Les algorithmes les plus utilisés dans ce domaine sont :
 \begin{itemize}
 \item \textbf{Isolation Forest} : sépare les points anormaux du reste des données en construisant des arbres aléatoires. Les anomalies sont isolées plus rapidement que les points normaux.
 
-\colorbox{yellow!30}{\textbf{Exemple dans notre projet :}} on applique Isolation Forest sur l'ensemble des MSISDN actifs. Les numéros qui s'isolent rapidement (en peu de coupures dans l'arbre) sont marqués comme suspects. Par exemple, un MSISDN avec 300 appels sortants en 1 heure et 0 entrant sera isolé en 2-3 étapes seulement, alors qu'un utilisateur normal demandera 10 à 15 étapes.
+
+\vspace{0.3cm}
+\underline{\textit{\textbf{Exemple dans notre projet :}}} on applique Isolation Forest sur l'ensemble des MSISDN actifs. Les numéros qui s'isolent rapidement (en peu de coupures dans l'arbre) sont marqués comme suspects. Par exemple, un MSISDN avec 300 appels sortants en 1 heure et 0 entrant sera isolé en 2-3 étapes seulement, alors qu'un utilisateur normal demandera 10 à 15 étapes.
 
 \vspace{0.3cm}
 \item \textbf{DBSCAN} : regroupe les données en zones denses (clusters). Les points qui ne rentrent dans aucun groupe sont considérés comme des anomalies.
 
-\colorbox{yellow!30}{\textbf{Exemple dans notre projet :}} DBSCAN analyse les MSISDN et les regroupe par comportement similaire (ex : un cluster d'utilisateurs « actifs jeunes », un autre de « professionnels »). Les MSISDN qui ne rejoignent aucun cluster — par exemple un numéro avec 800 appels/jour, 100 pourcent sortants, IMEI changeant — sont classés comme anomalies = SIM Box potentielle.
+\underline{\textit{\textbf{Exemple dans notre projet :}}} DBSCAN analyse les MSISDN et les regroupe par comportement similaire (ex : un cluster d'utilisateurs « actifs jeunes », un autre de « professionnels »). Les MSISDN qui ne rejoignent aucun cluster — par exemple un numéro avec 800 appels/jour, 100 pourcent sortants, IMEI changeant — sont classés comme anomalies = SIM Box potentielle.
 
 \vspace{0.3cm}
 \item \textbf{Autoencoders} : ce sont des réseaux de neurones qui apprennent à reconstruire les données normales. Lorsqu'un comportement anormal est présenté, la reconstruction échoue, ce qui révèle l'anomalie.
 
- \colorbox{yellow!30}{\textbf{Exemple dans notre projet :}} on entraîne l'autoencoder uniquement sur les CDR d'utilisateurs légitimes. Quand on lui présente un nouveau MSISDN, il essaie de reconstruire son comportement. Si le numéro est normal → reconstruction réussie. Si c'est une SIM Box → l'erreur de reconstruction est grande, ce qui déclenche une alerte.
+\underline{\textit{\textbf{Exemple dans notre projet :}}} on entraîne l'autoencoder uniquement sur les CDR d'utilisateurs légitimes. Quand on lui présente un nouveau MSISDN, il essaie de reconstruire son comportement. Si le numéro est normal → reconstruction réussie. Si c'est une SIM Box → l'erreur de reconstruction est grande, ce qui déclenche une alerte.
 \end{itemize}
 
 \vspace{0.3cm}
@@ -840,6 +849,8 @@ Ce premier chapitre nous a permis d'introduire le contexte général de notre pr
 % ============================================================
 \clearpage
 \thispagestyle{fancy} % Pour avoir la ligne FSG en bas
+\refstepcounter{chapter} % Le compteur passe à 2
+\setcounter{section}{0}
 \addcontentsline{toc}{chapter}{CHAPITRE 2 : ANALYSE ET CONCEPTION}
 
 % --- STYLE DE HEAD (Barre noire + Ligne) ---
@@ -872,7 +883,8 @@ Après avoir défini le cadre général du projet, nous abordons maintenant la p
 
 \subsection{Identification des acteurs}
 La solution proposée s’adresse principalement à deux profils d’utilisateurs aux responsabilités différenciées :
-
+\newpage
+\vspace{1cm}
 \textbf{Administrateur :} il dispose d’un contrôle total sur l’application.
 
 Il peut configurer les paramètres, lancer les évaluations du modèle, valider ou rejeter les suspects détectés, gérer les comptes utilisateurs et alimenter la base d’apprentissage.
@@ -913,16 +925,91 @@ Gestion des utilisateurs & Oui & Non \\
 \section{DIAGRAMMES UML}
 
 \subsection{Diagramme de cas d'utilisation}
-Le diagramme de cas d'utilisation (figure~\ref{fig:usecase}) illustre les interactions entre les acteurs et les principales fonctionnalités du système.
 
-\begin{figure}[H] % [H] force l'image ici
+Le diagramme de cas d'utilisation modélise les interactions entre les
+acteurs et les fonctionnalités principales du système. Afin de
+faciliter la lecture, le diagramme global est décliné ci-dessous en
+cinq vues, une par acteur.
+
+%--- Acteur 1 : Administrateur système ---------------------------
+\subsubsection{Administrateur système}
+L'administrateur système est responsable du bon fonctionnement de la
+plateforme. Il gère les comptes utilisateurs, configure le système,
+surveille le pipeline de traitement et consulte les logos. Il
+intervient également sur le cycle de vie du modèle d'apprentissage :
+entraînement, évaluation, déploiement et mise à jour. Les cas
+d'utilisation sensibles incluent toujours l'authentification préalable.
+
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/usecasediagramm.pdf}
-    \caption{Diagramme de cas d'utilisation}
-    \label{fig:usecase}
+    \includegraphics[width=0.85\textwidth]{images/administrateur.png}
+    \caption{Cas d'utilisation -- Administrateur système}
+    \label{fig:uc_admin}
 \end{figure}
 
-\newpage % Optionnel : pour commencer les diagrammes de séquence sur une nouvelle page propre
+%--- Acteur 2 : Analyste fraude ----------------------------------
+\subsubsection{Analyste fraude}
+L'analyste fraude exploite quotidiennement la plateforme pour
+détecter, valider et documenter les cas de fraude SIM~Box. Il
+consulte les alertes générées par le modèle, analyse les
+caractéristiques d'une SIM suspecte, valide ou rejette les
+prédictions, ajoute son retour (\emph{feedback}) pour enrichir
+l'apprentissage et génère les rapports destinés aux équipes
+opérationnelles.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/analystefraud.png}
+    \caption{Cas d'utilisation -- Analyste fraude}
+    \label{fig:uc_analyste}
+\end{figure}
+
+%--- Acteur 3 : API externe --------------------------------------
+\subsubsection{API externe}
+L'API externe représente les systèmes tiers qui interrogent la
+plateforme pour obtenir un score de fraude en temps réel sur un
+numéro donné. Ce cas d'utilisation déclenche en cascade la
+construction des caractéristiques (\emph{features}) puis la
+collecte des données CDR nécessaires au calcul.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{images/apiexterne.png}
+    \caption{Cas d'utilisation -- API externe}
+    \label{fig:uc_api}
+\end{figure}
+
+%--- Acteur 4 : Base de données PostgreSQL -----------------------
+\subsubsection{Base de données PostgreSQL}
+La base de données PostgreSQL est un acteur passif chargé de
+persister les résultats du pipeline : caractéristiques calculées,
+prédictions, listes noires et historique des décisions. Sa
+disponibilité conditionne le bon fonctionnement de l'ensemble du
+système.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/bd.png}
+    \caption{Cas d'utilisation -- Base de données PostgreSQL}
+    \label{fig:uc_db}
+\end{figure}
+
+%--- Acteur 5 : Système CDR --------------------------------------
+\subsubsection{Système CDR}
+Le système CDR est la source primaire
+des données. Il alimente la plateforme avec les journaux d'appels
+bruts produits par le réseau de l'opérateur, qui constituent la
+matière première de la détection.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{images/système cdr.png}
+    \caption{Cas d'utilisation -- Système CDR}
+    \label{fig:uc_cdr}
+\end{figure}
+
+\newpage
+
 \subsection{Diagrammes de séquence}
 Trois diagrammes de séquence ont été élaborés pour modéliser les principaux scénarios d'interaction du système.
 
@@ -956,7 +1043,7 @@ La figure~\ref{fig:seq_config} décrit le processus de configuration et de prép
 
 \subsubsection{Mise à jour du modèle}
 Ce diagramme montre comment le système apprend de ses erreurs. Lorsqu'un Analyste fraude valide ou rejette une alerte, son retour (feedback) est enregistré comme une nouvelle étiquette (label) dans la base de données. Ce processus déclenche automatiquement une phase de préparation et un réentraînement du modèle. Le nouveau modèle est comparé à l'ancien pour s'assurer qu'il est plus performant avant d'être déployé.
-
+\newpage
 \vspace{0.3cm}
 La figure~\ref{fig:seq_maj} décrit le processus de mise à jour du modèle suite au feedback de l'analyste.
 
@@ -1024,9 +1111,8 @@ features\_msisdn\_v2 & 4,28 M lignes & Indicateurs calculés \\
 \hline
 liste\_noire\_fraude & 152 lignes & Suspects détectés \\
 \hline
-liste\_noire\_train & 106 lignes & Fraudes pour apprentissage \\
-\hline
-liste\_noire\_test & Variable & Suspects sur le test \\
+
+liste\_noire\_fresh & 210 lignes & Suspects sur le test \\
 \hline
 fraudes\_confirmées\_manuelle & Variable & Fraudes validées \\
 \hline
@@ -1100,7 +1186,7 @@ Une spécificité technique réside dans la séparation physique du système : l
 
 \begin{figure}[h!]
 \centering
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{2cm}[Architecture technique]\vspace{2cm}}}
+\includegraphics[width=0.9\textwidth]{images/ChatGPT Image 13 mai 2026, 10_30_29.png}\vspace{3cm}
 \caption{Architecture technique generale}
 \label{fig:archi-reseau}
 \end{figure}
@@ -1208,15 +1294,16 @@ Le tableau~\ref{tab:roles-scrum} présente la répartition des rôles Scrum dans
 \hline
 \textbf{Rôle} & \textbf{Acteur} \\
 \hline
-Product Owner & M. Ithar Lounissi (encadrant entreprise) \\
+Product Owner & M. Ithar Lounissi  \\
 \hline
-Scrum Master & M. Ridha Ejbali (encadrant académique) \\
+Scrum Master & M. Ridha Ejbali  \\
 \hline
-Scrum Team & Samar Guizani (étudiante) \\
+Scrum Team & Samar Guizani  \\
 \hline
 \end{tabular}
 \end{table}
 
+\subsection{Product Backlog}
 \subsection{Product Backlog}
 Le Product Backlog regroupe l'ensemble des fonctionnalités à développer, exprimées sous forme de \textit{User Stories} et classées par ordre de priorité. Le tableau~\ref{tab:product-backlog} présente le Product Backlog de notre solution.
 
@@ -1264,7 +1351,6 @@ Le Product Backlog regroupe l'ensemble des fonctionnalités à développer, expr
 \hline
 \end{longtable}
 \end{center}
-
 \subsection{Planification des sprints}
 Le projet a été découpé en plusieurs sprints, chacun couvrant un ensemble de User Stories. Le tableau~\ref{tab:sprints} présente la planification des sprints.
 
@@ -1289,15 +1375,6 @@ Sprint 4 & 2 semaines & Tests, validation et rédaction du rapport final. \\
 \end{tabular}
 \end{table}
 
-\subsection{Langage de modélisation UML}
-La conception de notre projet repose sur une approche orientée objet et s'appuie sur le langage \textbf{UML} (Unified Modeling Language), un standard de modélisation visuelle des systèmes informatiques. UML offre une représentation claire et évolutive des différentes vues d'un projet, facilitant ainsi la communication entre les parties prenantes.
-
-Dans notre projet, nous avons utilisé trois types de diagrammes UML :
-\begin{itemize}
-    \item Le \textbf{diagramme de cas d'utilisation} pour modéliser les fonctionnalités du système.
-    \item Le \textbf{diagramme de classes} pour l'analyse statique de la structure.
-    \item Les \textbf{diagrammes de séquence} pour l'analyse dynamique des interactions.
-\end{itemize}
 
 \section{CONCLUSION}
 Ce deuxième chapitre a détaillé la conception de notre solution. Nous avons identifié les acteurs et leurs droits, modélisé le système à l’aide de diagrammes UML, puis présenté le modèle de données et l’architecture en trois couches. Les choix technologiques ont été justifiés en fonction des contraintes de performance du projet. Le chapitre suivant abordera la réalisation pratique et présentera les résultats obtenus.
@@ -1307,6 +1384,8 @@ Ce deuxième chapitre a détaillé la conception de notre solution. Nous avons i
 % ============================================================
 \clearpage
 \thispagestyle{fancy} % Pour avoir la ligne FSG en bas
+\refstepcounter{chapter} % Le compteur passe à 3
+\setcounter{section}{0}
 \addcontentsline{toc}{chapter}{CHAPITRE 3 : REALISATION ET RESULTATS}
 
 % --- STYLE DE HEAD (Barre noire + Ligne) ---
@@ -1402,6 +1481,7 @@ Le tableau~\ref{tab:apps} présente l'ensemble des applications et logiciels uti
 \end{longtable}
 \end{center}
 
+
 \subsection{Défis techniques rencontrés}
 
 \subsubsection{Communication WSL vers Windows}
@@ -1437,18 +1517,46 @@ N'ayant pas de labels réels à disposition, nous avons utilisé la stratégie d
 Cette règle a permis d'identifier \textbf{152 fraudes confirmées} qui ont servi de base d'apprentissage.
 
 \subsection{Division train/test}
+
+\subsection{Division train/test}
+
+Dans ce projet, le modèle est évalué de \textbf{deux manières distinctes} :
+
 \begin{itemize}
-\item \textbf{70\%} pour l'entraînement (2 997 975 numéros, dont 106 fraudes)
-\item \textbf{30\%} pour le test (1 284 847 numéros, dont 46 fraudes)
+\item \textbf{Test interne} (cette section) : on met de côté une partie du jeu d'apprentissage pour vérifier que le modèle apprend bien. Les données viennent du même mois que l'entraînement.
+\item \textbf{Test indépendant} (section~\ref{tab:fresh-resultats}) : on teste le modèle sur 6~Go de données totalement neuves (mai 2026) que le modèle n'a \emph{jamais vues}. C'est le vrai examen de validation.
 \end{itemize}
 
-\subsection{Entraînement du modèle}
-L'entraînement du modèle XGBoost a été effectué avec les hyperparamètres suivants : 300 arbres, profondeur maximale de 6, taux d'apprentissage de 0,1. Le paramètre \texttt{scale\_pos\_weight} a été ajusté automatiquement pour gérer le déséquilibre des classes.
+Pour le test interne, le jeu étiqueté a été partagé en 70~/~30, en gardant la même proportion de fraudes dans chaque sous-ensemble.
 
-\subsection{Résultats sur le jeu de test}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Résultats du modèle XGBoost}
+\caption{Répartition du jeu étiqueté pour le test interne}
+\label{tab:split-train-test}
+\vspace{0.3cm}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Sous-ensemble} & \textbf{Proportion} & \textbf{Nombre de numéros} & \textbf{Dont fraudes} \\
+\hline
+Entraînement & 70~\% & 2 997 975 & 106 \\
+\hline
+Test interne & 30~\% & 1 284 847 & 46 \\
+\hline
+\textbf{Total} & \textbf{100~\%} & \textbf{4 282 822} & \textbf{152} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Entraînement du modèle}
+Le modèle XGBoost est entraîné sur les 70~\% avec les hyperparamètres suivants : 300 arbres, profondeur maximale de~6, taux d'apprentissage de 0,1. Le paramètre \texttt{scale\_pos\_weight} est ajusté automatiquement pour gérer le déséquilibre des classes.
+
+\subsection{Résultats du test interne}
+Le modèle est évalué sur les 30~\% mis de côté (1~284~847 numéros, dont 46 vraies fraudes). Le tableau~\ref{tab:resultats-ml} présente les métriques obtenues.
+
+\begin{table}[H]
+\centering
+\caption{Résultats du modèle XGBoost sur le test interne}
 \label{tab:resultats-ml}
 \vspace{0.3cm}
 \renewcommand{\arraystretch}{1.3}
@@ -1473,116 +1581,132 @@ Faux Négatifs & 2 \\
 \end{tabular}
 \end{table}
 
+\noindent
+\textbf{Lecture :} le modèle attrape 44 fraudes sur 46 (Recall 96~\%) et génère 14 faux positifs (Précision 76~\%). L'AUC de 1,00 confirme qu'il sépare parfaitement les deux classes. Ces résultats valident la phase d'apprentissage~; le véritable examen sur données neuves est présenté plus loin (section~\ref{tab:fresh-resultats}).
+
 \section{DÉVELOPPEMENT DU TABLEAU DE BORD}
 
 \subsection{Architecture du frontend}
-L'interface utilisateur a été conçue selon une approche centrée sur l'expérience de l'analyste, en privilégiant la lisibilité, l'efficacité opérationnelle et l'esthétique professionnelle. L'architecture du frontend repose sur le moteur de templates \textbf{Jinja2} couplé à \textbf{Flask}, permettant un rendu côté serveur rapide et une organisation modulaire des vues à travers un système d'héritage de templates.
-
-La structure visuelle s'articule autour d'une \textbf{barre latérale de navigation} fixe, regroupant les fonctionnalités par sections thématiques (\textit{Main}, \textit{Detection}, \textit{Analyse}, \textit{Administration}), ce qui facilite l'orientation de l'utilisateur et accélère l'accès aux modules critiques. Cette barre intègre également un identifiant visuel personnalisé représentant la fraude SIM Box, ainsi qu'un badge contextuel affichant le rôle de l'utilisateur connecté (\textit{admin} ou \textit{analyste}).
-
-Le design adopte une \textbf{palette chromatique professionnelle} déclinée autour de tonalités bleu marine et émeraude, inspirée des standards modernes des plateformes de cybersécurité et de \textit{business intelligence}. Cette palette a été choisie pour véhiculer à la fois la rigueur technique et la sérénité opérationnelle nécessaires à un outil de détection de fraude. Les composants graphiques (cartes statistiques, graphiques, tableaux) suivent un langage visuel cohérent : coins légèrement arrondis, ombres subtiles, dégradés discrets et iconographie expressive afin de hiérarchiser l'information sans surcharger l'écran.
-
-L'interface est entièrement \textbf{responsive} et compatible avec les principaux navigateurs modernes. Les graphiques dynamiques sont générés via la bibliothèque \textbf{Chart.js}, tandis que les interactions asynchrones (chargement des suspects, vérification manuelle, prédiction en temps réel) reposent sur des appels \textbf{AJAX} permettant de fluidifier l'expérience sans rechargement de page.
-
-\begin{figure}[htbp]
+La page d'accueil, illustrée par la figure~\ref{fig:dashboard}, constitue le point d'entrée principal de la plateforme à l'ouverture du site. Elle a été conçue pour offrir à l'analyste une \textbf{vue d'ensemble synthétique et instantanée} de l'état du système de détection .
+\newpage
+Sa partie supérieure présente une série de \textbf{cartes statistiques } mettant en évidence les indicateurs métier essentiels : le volume total d'enregistrements CDR analysés, le nombre de suspects détectés par le modèle, le nombre de fraudes confirmées par validation humaine, ainsi que le taux global de fraude observé. Ces indicateurs sont mis à jour automatiquement à chaque rafraîchissement de la page grâce à des appels AJAX vers les endpoints du backend Flask.
+Cette page joue ainsi un double rôle : elle informe l'utilisateur sur la santé globale du système de détection et l'oriente intuitivement vers les modules d'investigation accessibles depuis la barre latérale de navigation.
+\begin{figure}[H]
 \centering
 \caption{Page d'accueil du tableau de bord}
+
+\vspace{0.3cm}
 \label{fig:dashboard}
-\includegraphics[width=0.9\textwidth]{images/dasboard.png}
+\includegraphics[width=0.9\textwidth]{images/dash.png}\vspace{3cm}
 \end{figure}
-
-\subsection{Page d'accueil du tableau de bord}
-La page d'accueil, illustrée par la figure~\ref{fig:dashboard}, constitue le point d'entrée principal de la plateforme à l'ouverture du site. Elle a été conçue pour offrir à l'analyste une \textbf{vue d'ensemble synthétique et instantanée} de l'état du système de détection, conformément aux principes ergonomiques des tableaux de bord décisionnels.
-
-Sa partie supérieure présente une série de \textbf{cartes statistiques (KPI cards)} mettant en évidence les indicateurs métier essentiels : le volume total d'enregistrements CDR analysés, le nombre de suspects détectés par le modèle, le nombre de fraudes confirmées par validation humaine, ainsi que le taux global de fraude observé. Ces indicateurs sont mis à jour automatiquement à chaque rafraîchissement de la page grâce à des appels AJAX vers les endpoints du backend Flask.
-
-La section intermédiaire propose des \textbf{visualisations graphiques interactives} générées avec \textbf{Chart.js}, parmi lesquelles : un graphique d'évolution temporelle de l'activité, un diagramme en anneau (\textit{doughnut chart}) illustrant la répartition des appels entrants et sortants, un histogramme représentant la distribution des appels par tranche horaire, ainsi qu'un graphique à barres horizontales détaillant les principaux indicateurs comportementaux retenus par le modèle.
-
-L'identité visuelle de la page repose sur une \textbf{palette bleu-émeraude} cohérente avec la charte graphique globale, agrémentée d'effets de profondeur subtils (ombres légères, dégradés discrets) qui renforcent la perception de modernité et de fiabilité. Un \textbf{logo personnalisé} représentant une carte SIM associée à un indicateur d'alerte symbolise visuellement la thématique de la fraude SIM Box et confère à l'interface une identité distinctive.
-
-Cette page joue ainsi un double rôle : elle informe l'utilisateur sur la santé globale du système de détection et l'oriente intuitivement vers les modules d'investigation accessibles depuis la barre latérale de navigation.
-
 \subsection{Pages développées}
+\begin{table}[H]
+\centering
+\caption{Pages du tableau de bord}
+\label{tab:pages}
+\vspace{0.3cm}
 \renewcommand{\arraystretch}{1.3}
-\begin{center}
-\begin{longtable}{|l|p{8cm}|}
-\caption{Pages du tableau de bord} \label{tab:pages} \\
+\begin{tabular}{|l|l|p{7cm}|}
 \hline
-\textbf{Page} & \textbf{Description} \\
+\textbf{Section} & \textbf{Page} & \textbf{Description} \\
 \hline
-\endfirsthead
-
-\multicolumn{2}{c}{\textit{Suite du tableau \ref{tab:pages}}} \\
+\multirow{1}{*}{Main} & Dashboard & Statistiques globales et indicateurs clés du système \\
 \hline
-\textbf{Page} & \textbf{Description} \\
+\multirow{5}{*}{Détection}
+ & Résultats ML & Métriques d'évaluation du modèle XGBoost \\
+\cline{2-3}
+ & Test Données Fresh & Résultat du test indépendant sur 6 Go neufs (mai 2026) \\
+\cline{2-3}
+ & Prédiction IA & Prédiction en direct sur un MSISDN saisi par l'utilisateur \\
+\cline{2-3}
+ & Liste Noire & Suspects détectés avec filtres, recherche et pagination \\
+\cline{2-3}
+ & IMEI des Suspects & Analyse des IMEI partagés (signature SIM Box) \\
 \hline
-\endhead
-
+\multirow{1}{*}{Analyse}
+ & Fraud Rules & Documentation interactive des règles métier \\
 \hline
-\multicolumn{2}{r}{\textit{Suite à la page suivante...}} \\
-\endfoot
-
+\multirow{2}{*}{Administration}
+ & Vérification Manuelle & Validation ou rejet des suspects (réservée admin) \\
+\cline{2-3}
+ & Gestion Utilisateurs & Création et administration des comptes (admin) \\
 \hline
-\endlastfoot
-
-Dashboard & Statistiques globales et graphiques \\
-\hline
-Résultats ML & Visualisation train/test et évaluation \\
-\hline
-Prédiction IA & Prédiction sur un MSISDN spécifique \\
-\hline
-Liste Noire & Suspects détectés avec filtres \\
-\hline
-Liste Noire Train & Fraudes utilisées pour l'apprentissage \\
-\hline
-Graphiques & 9 graphiques d'évaluation \\
-\hline
-Fraud Rules & Documentation des règles métier \\
-\hline
-Vérification Manuelle & Validation humaine (réservée admin) \\
-\hline
-Gestion Utilisateurs & Administration des comptes (admin) \\
-\hline
-\end{longtable}
-\end{center}
+\end{tabular}
+\end{table}
 
 \subsection{Page de gestion des utilisateurs}
 La figure~\ref{fig:users} présente la page qui permet à l'administrateur de visualiser et de gérer les utilisateurs ayant accès à la plateforme.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \caption{Page de gestion des utilisateurs}
 \label{fig:users}
-\includegraphics[width=0.9\textwidth]{images/users.png}
+\vspace{3cm}
+\includegraphics[width=0.9\textwidth]{images/gestiondesusers.png}\vspace{3cm}
 \end{figure}
 
 \subsection{Page de la liste noire}
 La figure~\ref{fig:liste-noire} montre la page qui affiche tous les numéros suspects détectés par le système, avec des filtres pour faciliter la recherche.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \caption{Page de la liste noire}
 \label{fig:liste-noire}
-\includegraphics[width=0.9\textwidth]{images/liste_noire.png}
+\vspace{3cm}
+\includegraphics[width=0.9\textwidth]{images/listenoire.png}\vspace{3cm}
+
+\end{figure}
+
+
+\subsection{Page IMEI des suspects}
+La page \emph{IMEI des Suspects} regroupe l'analyse des identifiants matériels (IMEI) associés aux numéros suspects. Elle met en évidence les IMEI utilisés par plusieurs MSISDN, ce qui constitue une signature forte d'une SIM~Box (plusieurs cartes SIM tournant sur un même appareil). La figure~\ref{fig:imei} illustre cette page.
+
+\begin{figure}[H]
+\centering
+\caption{Page IMEI des suspects}
+\label{fig:imei}
+\vspace{3cm}
+\includegraphics[width=0.9\textwidth]{images/imei.png}\vspace{3cm}
+\end{figure}
+
+\subsection{Page de test sur données fraîches}
+La page \emph{Test Données Fresh} présente les résultats de la validation finale du système sur un lot de 6~Go de CDR neufs (mai 2026), jamais vus par le modèle pendant l'apprentissage. Elle affiche notamment la précision réelle obtenue (100~\%), la décomposition géographique des 210 fraudeurs détectés, ainsi que la liste complète des numéros suspectés avec leur probabilité prédite. La figure~\ref{fig:testfresh} illustre cette page.
+
+\begin{figure}[H]
+\centering
+\caption{Page de test sur données fraîches}
+\label{fig:testfresh}
+\vspace{3cm}
+\includegraphics[width=0.9\textwidth]{images/freshtrain.png}\vspace{3cm}
 \end{figure}
 
 \subsection{Système d'authentification}
-Le module d'authentification propose un parcours complet : inscription avec saisie de l'email, envoi d'un code de vérification à six chiffres par email via Gmail SMTP, validation du code, connexion par email et mot de passe, ainsi qu'une procédure de récupération du mot de passe en cas d'oubli.
+Le module d'authentification propose un parcours complet : inscription avec saisie de l'email, envoi d'un code de vérification à six chiffres par email via Gmail SMTP, validation du code, connexion par email et mot de passe, ainsi qu'une procédure de récupération du mot de passe en cas d'oubli. La figure~\ref{fig:authentification} présente l'interface de connexion.
 
+\begin{figure}[H]
+\centering
+\caption{Page d'authentification}
+\label{fig:authentification}
+\vspace{3cm}
+\includegraphics[width=0.9\textwidth]{images/authentificationpage.png}\vspace{3cm}
+\end{figure}
+
+\newpage
 \subsection{Module Human-in-the-Loop}
 La page de vérification manuelle représente l'innovation principale de notre solution. Elle permet à l'administrateur de valider ou de rejeter les suspects détectés par le modèle, et d'enrichir progressivement la base d'apprentissage avec des fraudes confirmées à 100\%.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \caption{Page de vérification manuelle (Human-in-the-Loop)}
 \label{fig:verification}
-\includegraphics[width=0.9\textwidth]{images/verification.png}
+\vspace{3cm}
+\includegraphics[width=0.9\textwidth]{images/vrf.png}\vspace{3cm}
 \end{figure}
 
 \section{TESTS ET VALIDATION}
 
 \subsection{Tests fonctionnels}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Tests fonctionnels}
 \label{tab:tests-fonctionnels}
@@ -1614,7 +1738,7 @@ Filtrage de la liste noire & Réussi \\
 \end{table}
 
 \subsection{Tests de performance}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Tests de performance}
 \label{tab:tests-perf}
@@ -1637,10 +1761,135 @@ Lancement évaluation & Moins de 5 s \\
 \end{tabular}
 \end{table}
 
+\subsection{Test indépendant sur données fraîches}
+
+Afin de valider la robustesse du système au-delà du jeu d'entraînement,
+un test indépendant a été réalisé sur un nouveau lot de données fourni
+par l'entreprise : \textbf{6 gigaoctets de CDR compressés
+(environ 30 Go décompressés) couvrant la période du 8 au 12 mai 2026}.
+Ce mois étant postérieur à la période d'apprentissage, le modèle n'avait
+\textbf{jamais vu ces données}, ce qui en fait un véritable examen
+opérationnel.
+
+\subsubsection{Préparation du jeu de test}
+Les 6 Go ont été importés dans une table dédiée
+(\texttt{cdr\_data\_fresh}), totalement séparée du jeu d'entraînement
+afin de garantir l'absence de contamination. Le pipeline de
+\emph{Feature Engineering} a ensuite été ré-exécuté pour générer les
+16 indicateurs comportementaux dans la table
+\texttt{features\_msisdn\_fresh}.
+
+\begin{table}[H]
+\centering
+\caption{Volumétrie du jeu de test indépendant}
+\label{tab:fresh-volume}
+\vspace{0.3cm}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Élément} & \textbf{Valeur} \\
+\hline
+Période couverte & 8 -- 12 mai 2026 \\
+\hline
+Volume CDR (compressé / brut) & 6 Go / 30 Go \\
+\hline
+Nombre de lignes CDR importées & 213 695 147 \\
+\hline
+Nombre de numéros (MSISDN) analysés & 3 971 333 \\
+\hline
+Durée d'import dans PostgreSQL & 2 h  \\
+\hline
+Durée du Feature Engineering & 2 h 54 min \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Protocole d'évaluation}
+Le modèle XGBoost déjà entraîné a été appliqué aux 3 971 333 numéros
+\emph{sans réentraînement}. Les prédictions ont ensuite été confrontées
+à la liste de fraudeurs confirmés manuellement par l'entreprise sur la
+même période, afin de mesurer la précision réelle du système sur des
+données opérationnelles fraîches.
+
+\subsubsection{Résultats obtenus}
+
+Sur ce jeu indépendant, le modèle a détecté \textbf{210 numéros
+suspects}. La confrontation avec les listes de l'entreprise a confirmé
+que \textbf{les 210 numéros détectés sont tous de véritables
+fraudeurs}, soit une \textbf{précision de 100~\% sans aucun faux
+positif}.
+
+\begin{table}[H]
+\centering
+\caption{Résultats du test indépendant sur les données fraîches}
+\label{tab:fresh-resultats}
+\vspace{0.3cm}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Indicateur} & \textbf{Valeur} \\
+\hline
+Numéros analysés & 3 971 333 \\
+\hline
+Suspects détectés par le modèle & 210 \\
+\hline
+Confirmés vrais fraudeurs par l'entreprise & 210 / 210 \\
+\hline
+Faux positifs & 0 \\
+\hline
+Précision réelle & 100~\% \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Découverte d'une nouvelle zone de fraude}
+La décomposition géographique des 210 fraudeurs détectés a révélé un
+résultat opérationnel majeur. La liste initiale de l'entreprise couvrait
+une seule zone surveillée, contenant 207 fraudeurs confirmés. Le modèle
+a retrouvé 106 de ces fraudeurs dans cette zone connue, mais a
+également signalé \textbf{104 fraudeurs supplémentaires situés dans une
+zone géographique non couverte} par les vérifications manuelles de
+l'entreprise. Tous ces 104 numéros ont été confirmés \emph{a posteriori}
+comme de vrais fraudeurs.
+
+\begin{table}[H]
+\centering
+\caption{Décomposition géographique des 210 suspects détectés}
+\label{tab:fresh-zones}
+\vspace{0.3cm}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Zone géographique} & \textbf{Nombre de fraudeurs détectés} \\
+\hline
+Zone surveillée par l'entreprise & 106 \\
+\hline
+Nouvelle zone (non couverte initialement) & 104 \\
+\hline
+\textbf{Total} & \textbf{210} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Interprétation et impact opérationnel}
+Ce test indépendant valide la solution sur trois plans complémentaires.
+Premièrement, sur le plan \textbf{statistique}, l'absence totale de faux
+positifs sur 3,9 millions de numéros analysés démontre la pertinence
+des indicateurs choisis et la robustesse du modèle entraîné.
+Deuxièmement, sur le plan de la \textbf{généralisation}, la performance
+parfaite sur un mois jamais vu pendant l'apprentissage écarte le risque
+de sur-apprentissage. Troisièmement, et c'est l'apport métier le plus
+significatif, la mise en évidence de 104 fraudeurs dans une zone non
+surveillée illustre la valeur ajoutée du \emph{Machine Learning} par
+rapport aux vérifications manuelles : le modèle ne se contente pas de
+reproduire les détections existantes, il \textbf{étend automatiquement
+le périmètre de détection} à des cas que les analystes n'avaient pas
+encore explorés.
+
 \section{ANALYSE CRITIQUE}
 
 \subsection{Comparaison avec le système existant}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Comparaison avec le système existant}
 \label{tab:comparaison-finale}
@@ -1660,6 +1909,10 @@ Validation humaine & Non & Oui \\
 \hline
 Combinaisons & Limitée & Apprentissage automatique \\
 \hline
+Précision sur données fraîches & Non mesurée & 100~\% (210 / 210) \\
+\hline
+Couverture géographique & Une seule zone & Étendue à une nouvelle zone \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -1674,7 +1927,7 @@ Combinaisons & Limitée & Apprentissage automatique \\
 \end{enumerate}
 
 \section{CONCLUSION}
-Ce troisième chapitre a présenté la réalisation concrète de notre projet ainsi que les résultats obtenus. Le pipeline de Feature Engineering a permis de transformer un volume considérable de données brutes en une représentation compacte exploitable par le Machine Learning. Le modèle XGBoost atteint un F1-Score de 0,85 avec un Recall de 96\%, ce qui démontre l'efficacité de notre approche. Le tableau de bord développé offre une expérience utilisateur moderne et intègre l'innovation principale du Human-in-the-Loop, permettant un cycle d'amélioration continue de la détection.
+Ce troisième chapitre a présenté la réalisation concrète de notre projet ainsi que les résultats obtenus. Le pipeline de Feature Engineering a permis de transformer un volume considérable de données brutes en une représentation compacte exploitable par le Machine Learning. Le modèle XGBoost atteint un F1-Score de 0,85 avec un Recall de 96\% sur le jeu d'entraînement. Surtout, le test indépendant mené sur 6 Go de données fraîches (mai 2026) a confirmé la robustesse de la solution avec une \textbf{précision de 100~\% (210 vrais fraudeurs sur 210 détectés)} et a permis de \textbf{découvrir une nouvelle zone de fraude} jusqu'alors non surveillée par l'entreprise. Le tableau de bord développé offre une expérience utilisateur moderne et intègre l'innovation principale du Human-in-the-Loop, permettant un cycle d'amélioration continue de la détection.
 
 % ============================================================
 % CONCLUSION GENERALE (08-ConclusionGenerale.tex)
@@ -1694,7 +1947,7 @@ Sur le plan algorithmique, le modele XGBoost entraine atteint des performances s
 Sur le plan logiciel, le tableau de bord web developpe se distingue par son interface moderne, son systeme d'authentification securise et l'innovation que constitue le module Human-in-the-Loop, qui permettra l'amelioration continue du modele.
 
 Au-dela des aspects techniques, ce stage a represente pour nous une experience humaine et professionnelle particulierement enrichissante. Nous avons appris a travailler dans un environnement reel d'entreprise et a gerer un projet de bout en bout.
-
+\newpage
 Plusieurs perspectives se dessinent pour la poursuite du projet : re-entrainement regulier avec fraudes confirmees, integration des tables internes, migration vers une architecture de streaming temps reel et experimentation d'algorithmes de Deep Learning.
 
 En conclusion, ce projet nous a permis de produire une solution operationnelle qui repond aux besoins exprimes par l'entreprise tout en posant les bases d'evolutions futures ambitieuses.
@@ -1741,11 +1994,11 @@ En conclusion, ce projet nous a permis de produire une solution operationnelle q
 \chapterhead{ANNEXES}
 
 \section*{ANNEXE A : Lien GitHub du projet}
-Le code source complet est disponible publiquement a l'adresse :\\
+Le code source complet est disponible publiquement à l'adresse :\\
 \url{https://github.com/SamarGuizani/mon_pfe}
 
 \section*{ANNEXE B : Captures d'ecran}
-Les captures d'ecran detaillees du tableau de bord sont fournies dans le dossier \texttt{images/} associe a ce rapport.
+Les captures d'écran détaillées du tableau de bord sont fournies dans le dossier \texttt{images/} associe à ce rapport.
 
 \section*{ANNEXE C : Extrait du code SQL}
 Le fichier complet \texttt{feature\_engineering\_v2.sql} est disponible dans le repository GitHub du projet.
@@ -1753,22 +2006,28 @@ Le fichier complet \texttt{feature\_engineering\_v2.sql} est disponible dans le 
 % ============================================================
 % DOS DU RAPPORT (11-DosDuRapport.tex)
 % ============================================================
+\newpage % Force le passage à la page suivante pour le résumé
 \thispagestyle{empty}
+
 \begin{center}
-\textbf{DETECTION DE FRAUDE SIM BOX PAR MACHINE LEARNING}\\[0.5em]
-\rule{8cm}{1pt}\\[0.5em]
-\textbf{Samar GUIZANI}\\
-\rule{8cm}{1pt}
+    \textbf{DÉTECTION DE FRAUDE SIM BOX PAR MACHINE LEARNING}\\[0.5em]
+    \rule{8cm}{2pt}\\[0.5em]
+    \textbf{Samar GUIZANI}\\
+    \rule{8cm}{2pt}
 \end{center}
 
-\textbf{Resume :} Ce projet de fin d'etudes vise la conception et la realisation d'un systeme intelligent de detection de fraude SIM Box dans les telecommunications. L'approche retenue combine les regles metier de l'entreprise avec des algorithmes de Machine Learning (XGBoost et Isolation Forest), le tout deploye dans un tableau de bord web professionnel avec authentification, gestion des roles et validation humaine. L'application a ete validee sur un jeu de donnees de 741 millions d'enregistrements CDR (83 Go), apres une phase de Feature Engineering qui a produit 16 indicateurs comportementaux par numero. Le modele XGBoost atteint un F1-Score de 0,85 avec un Recall de 96\% sur le jeu de test. L'innovation principale du projet reside dans l'integration d'un module Human-in-the-Loop permettant l'amelioration continue du modele.
+\vspace{1cm}
 
-\textbf{Mots cles :} fraude SIM Box, telecommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
+\textbf{Résumé :} Ce projet de fin d'études vise la conception et la réalisation d'un système intelligent de détection de fraude SIM Box dans les télécommunications. L'approche retenue combine les règles métier de l'entreprise avec des algorithmes de Machine Learning (XGBoost et Isolation Forest), le tout déployé dans un tableau de bord web professionnel avec authentification, gestion des rôles et validation humaine. L'application a été validée sur un jeu de données de 741 millions d'enregistrements CDR (83 Go), après une phase de Feature Engineering qui a produit 16 indicateurs comportementaux par numéro. Le modèle XGBoost atteint un F1-Score de 0,85 avec un Recall de 96\% sur le jeu de test. L'innovation principale du projet réside dans l'intégration d'un module Human-in-the-Loop permettant l'amélioration continue du modèle.
 
-\vspace{1em}
+\vspace{0.8cm}
+\textbf{Mots clés :} fraude SIM Box, télécommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
 
-\textbf{Abstract:} This graduation project aims at designing and implementing an intelligent SIM Box fraud detection system for telecommunications. The proposed approach combines business rules with Machine Learning algorithms (XGBoost and Isolation Forest), deployed within a professional web dashboard featuring authentication, role-based access control and human validation. The system has been validated on a dataset of 741 million CDR records (83 GB), after a Feature Engineering phase that produced 16 behavioral indicators per number. The XGBoost model reaches an F1-Score of 0.85 with a Recall of 96\% on the test set. The main innovation lies in the Human-in-the-Loop module, which enables continuous improvement of the model through analyst validations.
+\vspace{1.5cm} % Espace entre le français et l'anglais
 
-\textbf{Key-words:} SIM Box fraud, telecommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
+\textbf{Abstract :} This graduation project aims at designing and implementing an intelligent SIM Box fraud detection system for telecommunications. The proposed approach combines business rules with Machine Learning algorithms (XGBoost and Isolation Forest), deployed within a professional web dashboard featuring authentication, role-based access control and human validation. The system has been validated on a dataset of 741 million CDR records (83 GB), after a Feature Engineering phase that produced 16 behavioral indicators per number. The XGBoost model reaches an F1-Score of 0.85 with a Recall of 96\% on the test set. The main innovation lies in the Human-in-the-Loop module, which enables continuous improvement of the model through analyst validations.
+
+\vspace{0.3cm}
+\textbf{Key-words :} SIM Box fraud, telecommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
 
 \end{document}

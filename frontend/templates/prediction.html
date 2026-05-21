@@ -86,7 +86,8 @@ async function predire() {
     const card = document.getElementById("verdict-card");
     card.className = "card predict-verdict-card " + (isFraude ? "verdict-fraude" : "verdict-normal");
 
-    document.getElementById("verdict-msisdn").textContent = d.msisdn;
+    document.getElementById("verdict-msisdn").textContent = d.msisdn
+        + (d.source ? "  (source : " + d.source + ")" : "");
     document.getElementById("verdict-label").textContent = d.prediction.toUpperCase();
     document.getElementById("verdict-proba").textContent = d.probabilite_fraude + "%";
 

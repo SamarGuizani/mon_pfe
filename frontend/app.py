@@ -900,18 +900,25 @@ def api_predict_msisdn():
     msisdn = data.get("msisdn", "").strip()
     if not msisdn:
         return jsonify({"error": "MSISDN vide"}), 400
+    sql_features = """
+        SELECT appels_sortants, appels_entrants,
+               duree_sortants, duree_entrants,
+               avg_duree_sortants, avg_duree_entrants,
+               variance_sortants, variance_entrants,
+               location_count, location_count_sortants, location_count_entrants,
+               active_hours, distinct_imei,
+               unique_called, unique_calling, nb_jours_actifs
+        FROM {table} WHERE msisdn = :msisdn
+    """
+    row, source = None, None
     with engine.connect() as conn:
-        r = conn.execute(text("""
-            SELECT appels_sortants, appels_entrants,
-                   duree_sortants, duree_entrants,
-                   avg_duree_sortants, avg_duree_entrants,
-                   variance_sortants, variance_entrants,
-                   location_count, location_count_sortants, location_count_entrants,
-                   active_hours, distinct_imei,
-                   unique_called, unique_calling, nb_jours_actifs
-            FROM features_msisdn_v2 WHERE msisdn = :msisdn
-        """), {"msisdn": msisdn})
-        row = r.fetchone()
+        for table, label in (("features_msisdn_v2", "ancien jeu"),
+                             ("features_msisdn_fresh", "test mai 2026")):
+            r = conn.execute(text(sql_features.format(table=table)), {"msisdn": msisdn})
+            row = r.fetchone()
+            if row:
+                source = label
+                break
     if not row:
         return jsonify({"error": f"MSISDN '{msisdn}' non trouve dans la base"}), 404
     feature_values = [float(v) if v is not None else 0.0 for v in row]
@@ -921,7 +928,8 @@ def api_predict_msisdn():
     proba_fraude = float(model_xgb.predict_proba(X)[0][1])
     return jsonify({"msisdn": msisdn, "prediction": "Fraude" if prediction == 1 else "Normal",
                      "probabilite_fraude": round(proba_fraude * 100, 2),
-                     "features": feature_dict, "anomalies": {}})
+                     "features": feature_dict, "anomalies": {},
+                     "source": source})
 
 @app.route("/api/suspects")
 @login_required

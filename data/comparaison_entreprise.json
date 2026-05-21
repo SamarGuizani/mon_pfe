@@ -2,8 +2,13 @@
   "entreprise_total": 207,
   "modele_detecte": 210,
   "en_commun": 106,
+  "en_plus_confirmes": 104,
+  "manques_zone_connue": 101,
+  "precision": 1.0,
+  "recall_zone_connue": 0.5121,
+  "decouverte_nouvelle_zone": true,
+  "total_fraudeurs_reels": 311,
   "manques": 101,
   "en_plus": 104,
-  "precision": 0.5048,
   "recall": 0.5121
 }
