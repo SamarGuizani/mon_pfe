@@ -1,10 +1,19 @@
 """
 Module de connexion reutilisable pour tous les scripts du projet.
-Detecte automatiquement l'IP de Windows depuis WSL.
+- En production (Render) : utilise la variable d'environnement DATABASE_URL (Neon).
+- En local (WSL) : detecte automatiquement l'IP de PostgreSQL sur Windows.
 """
+import os
 import subprocess
 import psycopg
 from sqlalchemy import create_engine, text
+
+# Charger .env si present (developpement local)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 DB_USER = "postgres"
 DB_PASSWORD = "samar123"
@@ -55,7 +64,18 @@ def trouver_ip_windows():
 
 
 def get_engine():
-    """Retourne un SQLAlchemy engine connecte a PostgreSQL Windows"""
+    """Retourne un SQLAlchemy engine.
+    - Si DATABASE_URL existe (Render/production)   -> on l'utilise directement.
+    - Sinon (developpement WSL)                    -> on detecte l'IP Windows.
+    """
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url:
+        # Neon donne 'postgresql://...'  -> sqlalchemy attend 'postgresql+psycopg://...'
+        if db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        return create_engine(db_url, pool_pre_ping=True)
+
+    # Fallback developpement local
     ip = trouver_ip_windows()
     conn_string = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{ip}:{DB_PORT}/{DB_NAME}"
     return create_engine(conn_string)

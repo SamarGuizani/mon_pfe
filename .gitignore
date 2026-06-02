@@ -16,3 +16,6 @@ frontend/email_config.py
 # IDE
 .vscode/
 .idea/
+.env
+.env.local
+*.pkl.bak
