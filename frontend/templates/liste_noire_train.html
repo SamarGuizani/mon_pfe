@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => loadSuspects(1));
 async function loadSuspects(page) {
     currentPage = page;
     const search = document.getElementById("search-input").value;
-    const res = await fetch(`/api/suspects-train?page=${page}&per_page=${perPage}&search=${search}`);
+    const res = await fetch(`/api/suspects-train?page=${page}&per_page=${perPage}&search=${encodeURIComponent(search)}`);
     const data = await res.json();
 
     document.getElementById("badge-total").textContent = fmt(data.total);

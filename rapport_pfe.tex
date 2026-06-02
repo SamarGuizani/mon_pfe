@@ -5,21 +5,45 @@
 
 \documentclass[12pt, oneside, a4paper]{report}
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[french]{babel}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+
+\setmainlanguage{french}
+\setotherlanguage{arabic}
+
+% ==================================================
+% ARABIC FONT
+% ==================================================
+
+\newfontfamily\arabicfont[Script=Arabic]{Amiri}
+\setmainfont{Times New Roman}
+%\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+%\usepackage[arabe,french]{babel}
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{geometry}
 \usepackage{setspace}
 \usepackage{minitoc}
 \usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\fontsize{14}{17}\bfseries}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{14}\bfseries}{\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12}{14}\itshape}{\thesubsubsection}{1em}{}
 \usepackage{fancyhdr}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{array}
 \usepackage{booktabs}
+%\usepackage{mathptmx}        % Times New Roman pour tout le texte
+\usepackage{setspace}        % déjà présent, garde-le
+\onehalfspacing              % interligne 1.5 pour tout le rapport
 
 \geometry{a4paper, margin=2.5cm, top=3cm, bottom=3cm}
 
@@ -75,92 +99,129 @@
   \renewcommand{\footrulewidth}{0.4pt}
 }
 \usepackage{float}
+\definecolor{mauveFSG}{RGB}{102, 0, 153}
+\usepackage{caption}
+\captionsetup[table]{position=above}   % titre tableau → au-dessus
+\captionsetup[figure]{position=below}  % titre figure → en dessous
 \begin{document}
 
 % ============================================================
-% PAGE DE GARDE (00-PageDeGarde.tex)
+% PAGE DE GARDE COMPLÈTE AVEC FILETS MAUVES
 % ============================================================
 \begin{titlepage}
 \thispagestyle{empty}
-\newgeometry{top=1.2cm, bottom=1cm, left=2cm, right=2cm}
+\newgeometry{top=1.2cm, bottom=1.2cm, left=2cm, right=2cm}
 \begin{center}
-\begin{minipage}[t]{0.45\textwidth}
-\begin{flushleft}
-\scriptsize
-République Tunisienne\\
-Ministère de l'Enseignement Supérieur\\
-et de la Recherche Scientifique\\
-\rule{4cm}{0.5pt}\\
-Université de Gabès\\
-\rule{4cm}{0.5pt}\\
-\universityName
-\end{flushleft}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.20\textwidth}
-\centering
-\includegraphics[width=\linewidth, height=2.2cm, keepaspectratio]{images/ministere.png}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.30\textwidth}
-\begin{flushright}
-\scriptsize
-\textbf{Licence en :}\\
-Science de l'informatique\\[0.3em]
-\textbf{Option :}\\
-Big Data \& IA\\[0.3em]
-\textbf{N. d'ordre :} INF-2026-001
-\end{flushright}
-\end{minipage}
 
-\vspace{0.3cm}
-\rule{\textwidth}{1pt}
+    % ==========================================
+    % EN-TÊTE SUPÉRIEUR (Trois colonnes)
+    % ==========================================
+    \begin{minipage}[t]{0.45\textwidth}
+        \begin{flushleft}
+            \fontsize{10pt}{12pt}\selectfont
+            République Tunisienne\\
 
-\vspace{0.6cm}
+            \vspace{0.3cm}
+            Ministère de l'Enseignement Supérieur et de\\
+            la Recherche Scientifique\\[0.4em]
 
-{\Huge\textbf{Projet de Fin d'Etudes}}\\[0.4cm]
+            \vspace{0.3cm}
+            Université de Gabès\\
+            \vspace{0.3cm}
+            Faculté des Sciences de Gabès
+        \end{flushleft}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.15\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, height=1.8cm, keepaspectratio]{images/image_2026-05-31_151921423.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\textwidth}
+        \begin{flushright}
+            \fontsize{10pt}{12pt}\selectfont
+            A. U. : 2025-2026\\[0.3em]
+            N° Ordre : LGLSI<\color{blue}N°\dots\color{black}>
+        \end{flushright}
+    \end{minipage}
 
-{\large \textit{présenté à}}\\[0.15cm]
+    \vspace{1.8cm}
 
-\textbf{La Faculté des Sciences de Gabes}\\[0.5cm]
+    % ==========================================
+    % CORPS DE LA PAGE DE GARDE
+    % ==========================================
+    % Titre Principal
+    {\fontsize{30pt}{36pt}\selectfont \textbf{Projet de Fin d'Études}} \\[0.6cm]
 
-{\large \textit{en vue de l'obtention du}}\\[0.15cm]
+    % Présenté à
+    {\fontsize{11pt}{14pt}\selectfont \textit{Présenté à :}} \\[0.4cm]
+    {\fontsize{14pt}{18pt}\selectfont La Faculté des Sciences de Gabès} \\[0.8cm]
 
-\textbf{Diplôme National de Licence en :}\\
-\textbf{Science de l'informatique}\\[0.3cm]
+    % Département
+    {\fontsize{14pt}{18pt}\selectfont \textbf{Département Informatique}} \\[0.8cm]
 
-{\large \textit{Option :}}\\
-\textbf{Big Data \& Intelligence Artificielle}\\[0.7cm]
+    % Diplôme visé
+    {\fontsize{11pt}{14pt}\selectfont \textit{en vue de l'obtention du diplôme de}} \\[0.4cm]
+    {\fontsize{13pt}{16pt}\selectfont \textbf{\color{blue} LICENCE GENIE LOGICIELS ET SYSTEMES D'INFORMATION}} \\[0.6cm]
 
-{\large \textit{Réalisé par}}\\[0.2cm]
+    % ==========================================
+    % PREMIÈRE DOUBLE LIGNE MAUVE (plus courte)
+    % ==========================================
+    \noindent\makebox[\textwidth]{%
+    \color{mauveFSG}%
+    \vbox{
+        \hrule width 0.72\textwidth height 0.5pt 
+        \vbox to 3pt{} 
+        \hrule width 0.72\textwidth height 2.5pt 
+        \vbox to 3pt{} 
+        \hrule width 0.72\textwidth height 0.5pt
+    }%
+} \\[0.6cm]
 
-{\Large\textbf{Samar GUIZANI}}\\[0.7cm]
+    % Titre du Projet
+    {\fontsize{14pt}{18pt}\selectfont \textbf{\color{blue} Approche hybride : Règles-Intelligence Artificielle pour la détection de la fraude Sim Box bypass à partir des CDR dans les réseaux de télécommunications 
+}} \\[0.6cm]
 
-\rule{0.5\textwidth}{1pt}\\[0.5cm]
-{\LARGE\textbf{DETECTION DE FRAUDE SIM BOX}}\\[0.4cm]
-{\LARGE\textbf{PAR MACHINE LEARNING}}
-\rule{0.5\textwidth}{1pt}\\[0.7cm]
+    % ==========================================
+    % DEUXIÈME DOUBLE LIGNE MAUVE (pleine largeur)
+    % ==========================================
+    \noindent\makebox[\textwidth]{%
+    \color{mauveFSG}%
+    \vbox{
+        \hrule width \textwidth height 0.5pt 
+        \vbox to 3pt{} 
+        \hrule width \textwidth height 2.5pt 
+        \vbox to 3pt{} 
+        \hrule width \textwidth height 0.5pt
+    }%
+} \\[0.8cm]
 
-\large{Soutenu le jj/mm/2026, devant la commission d'examen :}\\[0.3cm]
+    % Section Étudiants (Réalisé Par)
+    {\fontsize{12pt}{15pt}\selectfont \textit{Réalisé Par :}} \\[0.4cm]
+    {\fontsize{14pt}{18pt}\selectfont \textbf{\color{blue} Samar Guizani}} \\
+    
 
-\normalsize
-\begin{tabular}{ll}
-M./Mme. Prenom Nom & President \\
-M./Mme. Prenom Nom & Rapporteur \\
-M. Ridha Ejbali & Encadrant Academique \\
-M. Ithar Lounissi & Encadrant Entreprise (Elite Business) \\
-\end{tabular}
+    % Date et Jury
+    {\fontsize{13pt}{16pt}\selectfont \textit{Soutenu le 12/06/2026}} \\
+    {\fontsize{12pt}{15pt}\selectfont \textit{Devant le jury composé de :}} \\[0.8cm]
+    
 
-\vfill
+    % Tableau des membres du Jury
+    \noindent
+    \setstretch{1.3}
+    \fontsize{11pt}{14pt}\selectfont
+    \begin{tabular}{@{} p{0.6\textwidth} r @{}}
+        \textbf{\color{blue}M. \quad Haifa Touati} & \textit{Présidente} \\
+         \textbf{\color{blue}M. \quad Marwa Naas} & \textit{Examinatrice} \\
+        \textbf{\color{blue}M. \quad Ridha Ejbali} & \textit{Encadrant} \\
+       
+    \end{tabular}
 
-\textbf{Année Universitaire \academicYear}
 \end{center}
 \restoregeometry
 \end{titlepage}
-\doublespacing{}
 \pagenumbering{arabic}
 \setcounter{page}{1}
-
 % ============================================================
 % DEDICACE (01-Dedication.tex)
 % ============================================================
@@ -176,22 +237,22 @@ M. Ithar Lounissi & Encadrant Entreprise (Elite Business) \\
 \begin{center}
 \textit{\textbf{À ma chère mère , Derbali Afef}}
 
-{\Huge\textbf{À}} ma chère mère, source intarissable d'amour, de tendresse et de sacrifices, qui n'a jamais cessé de m'encourager dans toutes mes entreprises et qui a été pour moi un modèle de courage et de dévouement.
+{\Huge\textbf{À}} ma chère mère, source d'amour, de tendresse et de sacrifices, qui n'a jamais cessé de m'encourager dans toutes mes projets et qui a été pour moi un modèle de courage et de dévouement.
 
 \end{center}
 \begin{center}
 \textit{\textbf{À mon cher père , Guizani Zahreddine}}
 
-{\Huge\textbf{À}} mon cher père, qui m'a appris la valeur du travail bien fait, la rigueur et la persévérance. Ses sages conseils et son soutien indéfectible ont été les piliers de ma réussite tout au long de ces années d'études.
+{\Huge\textbf{À}} mon cher père, qui m'a appris la valeur du travail bien fait, la rigueur et la persévérance. Ses sages conseils et son soutien  ont été les piliers de ma réussite tout au long de ces années d'études.
 
 
 \end{center}
 
 \begin{center}
-\textit{\textbf{À mon frère Mohamed et mes sœurs Arij, Rana}}
+\textit{\textbf{À mon frère Mohamed et mes  soeurs Arij , Rana }}
 
 
-{\Huge\textbf{À}} mes frères et sœurs et mes premiers amis, dont la présence chaleureuse et le soutien constant m'ont accompagnée dans les moments de doute comme dans les moments de joie.
+{\Huge\textbf{À}} mon frère et mes  sœurs , dont la présence chaleureuse et le soutien constant m'ont accompagnée dans les moments de doute comme dans les moments de joie.
 
 
 \end{center}
@@ -200,7 +261,7 @@ M. Ithar Lounissi & Encadrant Entreprise (Elite Business) \\
 \textit{\textbf{À mes enseignants}}
 
 
-{\Huge\textbf{À}} À mes chers enseignants, qui m'ont transmis le savoir avec patience et passion tout au long de mon parcours academique.
+{\Huge\textbf{À}} mes chers enseignants, qui m'ont transmis le savoir avec patience et passion tout au long de mon parcours academique.
 
 
 \end{center}
@@ -208,11 +269,10 @@ M. Ithar Lounissi & Encadrant Entreprise (Elite Business) \\
 \begin{center}
 \textit{\textbf{À toutes les personnes qui me sont chères,}}\\
 
-{\Huge\textbf{À}} mes chers amis, avec qui j'ai partagé tant de moments précieux durant mon parcours universitaire. Votre amitié sincère a illuminé ces années d'études.
+{\Huge\textbf{À}} mes chers amis, avec qui j'ai partagé tant de moments précieux durant mon parcours universitaire. 
 
 
 
-\textit{Je dédie ce modeste travail.}
 \end{center}
 
 \vspace{1cm}
@@ -238,15 +298,17 @@ M. Ithar Lounissi & Encadrant Entreprise (Elite Business) \\
 
 Au terme de ce projet de fin d'études, il m'est particulièrement agréable d'exprimer ma profonde gratitude à toutes les personnes qui, par leur soutien et leurs encouragements, ont contribué à la réussite de ce travail.
 
-Je tiens tout d'abord à remercier sincèrement mon encadrant académique à la \textbf{Faculté des Sciences de Gabes }, \textbf{M.Ridha Ejbali }, pour la qualité de son accompagnement, ses précieuses orientations et la pertinence de ses remarques. Sa rigueur scientifique et sa bienveillance ont été pour moi une source constante de motivation.
+Je tiens tout d'abord  à exprimer ma profonde reconnaissance à la présidente du jury, \textbf{Mme Haifa Touati}, pour l'honneur qu'elle me fait de présider cette soutenance, ainsi qu'à la rapporteuse, \textbf{Mme Marwa Naas}, pour le temps précieux qu'elle a consacré à l'examen de ce travail.
+
+Je tiens aussi  à remercier sincèrement mon encadrant académique à la \textbf{Faculté des Sciences de Gabes }, \textbf{M.Ridha Ejbali }, pour la qualité de son accompagnement, ses précieuses orientations et la pertinence de ses remarques. Sa rigueur scientifique et sa bienveillance ont été pour moi une source constante de motivation.
 
 J'adresse également mes plus chaleureux remerciements à mon encadrant professionnel au sein de l'entreprise \textbf{Elite Business}, \textbf{M. Ithar Lounissi}, pour m'avoir accueillie dans son équipe et fait bénéficier de son expertise. Sa patience et la confiance qu'il m'a accordée ont rendu ce stage particulièrement enrichissant.
 
-Mes remerciements vont aussi à l'ensemble de l'\textbf{équipe d'Elite Business}, qui m'a intégrée avec chaleur et professionnalisme, ainsi qu'à \textbf{tous les enseignants} de FSG pour la qualité de la formation dispensée durant mon cursus.
+Mes remerciements vont aussi à l'ensemble de l'\textbf{équipe d'Elite Business}, qui m'a intégrée avec chaleur et professionnalisme, ainsi qu'à \textbf{tous les enseignants} de FSG pour la qualité de la formation dispensée durant mon parcours universitaire.
 
-Mes plus sincères remerciements s'adressent enfin aux \textbf{honorables membres du jury} qui m'ont fait l'honneur d'accepter d'évaluer ce modeste travail.
+Mes plus sincères remerciements s'adressent enfin aux \textbf{honorables membres du jury} qui m'ont fait l'honneur d'accepter  ce modeste travail.
 
-Enfin, à ma \textbf{famille} et à mes \textbf{amis}, je tiens à exprimer ma profonde gratitude pour leur soutien moral inconditionnel tout au long de cette aventure.
+Enfin, à ma \textbf{famille} et à mes \textbf{amis}, je tiens à exprimer ma profonde gratitude pour leur soutien moral tout au long de cette aventure.
 
 Que toutes ces personnes trouvent ici l'expression de ma reconnaissance la plus sincère.
 
@@ -322,10 +384,9 @@ Que toutes ces personnes trouvent ici l'expression de ma reconnaissance la plus 
 % --- STYLE DE HEAD IDENTIQUE A LA CAPTURE ---
 \noindent\rule[-0.2cm]{0.45cm}{1.2cm}\hspace{0.15cm}%
 \raisebox{0.85cm}{\rule{0.85\textwidth}{0.5pt}}\\[0.3cm]
-\noindent\hspace*{0.6cm}{\Huge\textbf{ABREVIATIONS}}\\[1.0cm]
-
+\noindent\hspace*{0.6cm}{\Huge\textbf{ABREVIATIONS}}\\
 \begin{description}
-\item[\textbf{API}] Application Programming Interface
+\item[\textbf{API}] Application Interface
 \item[\textbf{AUC}] Area Under the Curve
 \item[\textbf{CDR}] Call Detail Record
 \item[\textbf{CFCA}] Communications Fraud Control Association
@@ -374,7 +435,9 @@ Que toutes ces personnes trouvent ici l'expression de ma reconnaissance la plus 
 % --- STYLE DE HEAD IDENTIQUE A LA CAPTURE ---
 \noindent\rule[-0.2cm]{0.45cm}{1.2cm}\hspace{0.15cm}%
 \raisebox{0.85cm}{\rule{0.85\textwidth}{0.5pt}}\\[0.3cm]
-\noindent\hspace*{0.6cm}{\Huge\textbf{INTRODUCTION GÉNÉRALE}}\\[1.0cm]
+\noindent\hspace*{0.6cm}{\Huge\textbf{INTRODUCTION GÉNÉRALE}}\\
+\vspace{1cm}
+
 
 Le secteur des télécommunications connaît depuis plusieurs années une croissance soutenue, portée par la généralisation des appareils mobiles et la multiplication des services proposés aux utilisateurs. Cette expansion s'accompagne malheureusement d'une augmentation considérable des activités frauduleuses, qui représentent aujourd'hui un manque à gagner énorme pour les opérateurs télécoms à l'échelle mondiale.
 
@@ -386,15 +449,17 @@ C'est dans ce contexte que s'inscrit le présent projet de fin d'études, réali
 
 La problématique centrale de ce projet peut être formulée comme suit : \textit{comment détecter automatiquement les fraudeurs SIM Box parmi un volume considérable de données CDR (Call Detail Records) de l'ordre de 741 millions d'enregistrements, avec une précision élevée, un temps de réponse rapide, et tout en permettant l'amélioration continue du système grâce à une validation humaine ?}
 
-Pour répondre à cette problématique, nous avons adopté une démarche structurée comprenant plusieurs étapes successives : l'analyse du métier et l'exploration des données brutes, l'extraction d'indicateurs comportementaux pertinents, la mise en œuvre d'un pipeline de Machine Learning supervisé et non supervisé, ainsi que le développement d'un tableau de bord web complet intégrant authentification, prédictions en temps réel et validation humaine.
+\newpage
+Pour répondre à cette problématique, nous avons adopté une démarche structurée comprenant plusieurs étapes successives : l'analyse du métier et l'exploration des données brutes,\\ l'extraction d'indicateurs comportementaux pertinents, la mise en œuvre d'un pipeline de Machine Learning supervisé et non supervisé, ainsi que le développement d'un tableau de bord web\\ complet intégrant authentification, prédictions en temps réel et validation humaine.
 
-Le présent rapport, organisé en \textbf{trois chapitres}, retrace fidèlement l'ensemble de cette démarche.
+Le présent rapport, organisé en \textbf{trois chapitres}, retrace fidèlement l'ensemble de cette\\ démarche.
 
-Le \textbf{premier chapitre} est consacré à la présentation du contexte général du projet. Il s'ouvre sur une description de l'entreprise d'accueil et de son secteur d'activité, puis aborde en détail le phénomène de la fraude SIM Box, ses mécanismes et ses conséquences économiques. Après avoir réalisé un état de l'art des méthodes de détection existantes, nous formulons la problématique du projet, fixons les objectifs à atteindre et établissons le cahier des charges fonctionnel et technique qui guidera notre travail.
+Le \textbf{premier chapitre} est consacré à la présentation du contexte général du projet. Il s'ouvre sur une description de l'entreprise d'accueil et de son secteur d'activité, puis aborde en détail le phénomène de la fraude SIM Box, ses mécanismes et ses conséquences économiques. Après avoir réalisé un état de l'art des méthodes de détection existantes, nous formulons la \\ problématique du projet, fixons les objectifs à atteindre et établissons le cahier des charges\\ fonctionnel et technique qui guidera notre travail.
 
-Le \textbf{deuxième chapitre} est dédié à l'analyse et à la conception du système proposé. Il présente l'analyse des besoins, les diagrammes de modélisation UML, le modèle de données retenu et l'architecture technique générale. Nous y exposons également les choix technologiques effectués et les justifications qui les sous-tendent.
+Le \textbf{deuxième chapitre} est dédié à l'analyse et à la conception du système proposé. Il présente l'analyse des besoins, les diagrammes de modélisation UML, le modèle de données retenu et l'architecture technique générale. Nous y exposons également les choix technologiques 
+effectués et les justifications qui les sous-tendent.
 
-Le \textbf{troisième chapitre} traite de la réalisation pratique du projet. Il décrit le pipeline de Feature Engineering, le processus d'apprentissage automatique, le développement du tableau de bord web ainsi que les résultats obtenus à l'issue des différents tests. Une analyse critique des performances et des limites du système conclut ce chapitre.
+Le \textbf{troisième chapitre} traite de la réalisation pratique du projet. Il décrit le pipeline \\de Feature Engineering, le processus d'apprentissage automatique, le développement du tableau de bord web ainsi que les résultats obtenus à l'issue des différents tests. Une analyse critique des performances et des limites du système conclut ce chapitre.
 
 Enfin, une \textbf{conclusion générale} synthétise les contributions du projet, dresse un bilan des compétences acquises et propose plusieurs pistes d'amélioration et perspectives d'évolution.
 
@@ -574,7 +639,7 @@ Sur le plan juridique, ce type de fraude est considéré comme un délit dans la
 
 \subsection{Approche basée sur les règles statiques}
 L'approche traditionnelle, encore très utilisée aujourd'hui par de nombreux opérateurs téléphoniques, repose sur l'écriture manuelle de règles SQL appliquées directement aux données CDR (Call Detail Records).Le principe est simple : les experts métier définissent des seuils sur certaines variables (par exemple : « si un numéro fait plus de 100 appels par heure » ou « si la durée moyenne des appels est inférieure à 30 secondes »). Lorsque ces seuils sont dépassés, le système déclenche automatiquement une alerte signalant que le numéro est suspect.
-
+\newpage
 Cette méthode présente plusieurs avantages :
 \begin{itemize}
 \item Elle est facile à comprendre et à expliquer aux équipes métier.
@@ -767,7 +832,7 @@ Pour répondre à cette problématique, nous avons fixé les objectifs suivants 
 \section{CAHIER DES CHARGES}
 
 \subsection{Besoins fonctionnels}
-\begin{table}[h!]
+\begin{table}[H]
 \centering
 \caption{Besoins fonctionnels}
 \label{tab:bf}
@@ -813,7 +878,7 @@ BF16 & Gérer les comptes utilisateurs (admin) \\
 \end{table}
 
 \subsection{Besoins non-fonctionnels}
-\begin{table}[h!]
+\begin{table}[H]
 \centering
 \caption{Besoins non-fonctionnels}
 \label{tab:bnf}
@@ -1060,20 +1125,21 @@ La figure~\ref{fig:seq_maj} décrit le processus de mise à jour du modèle suit
 Le diagramme de classes présente l'architecture statique de la plateforme et illustre la manière dont les différentes entités collaborent pour transformer les données brutes en décisions opérationnelles. L'organisation s'articule autour de quatre axes principaux :
 
 \begin{itemize}
-    \item \underline{\textbf{Gestion des données :}} La classe \texttt{ConnecteurBaseDonnees} assure l'interface avec le stockage persistant, permettant l'extraction des \texttt{Donnees\_CDR}. Ces dernières regroupent les attributs techniques essentiels (MSISDN, IMEI, durée, horodatage) nécessaires à l'analyse.
+    \item \underline{\textbf{Gestion des données :}} \\
+    La classe \texttt{ConnecteurBaseDonnees} assure l'interface avec le stockage persistant, permettant l'extraction des \texttt{Donnees\_CDR}. Ces dernières regroupent les attributs techniques essentiels (MSISDN, IMEI, durée, horodatage) nécessaires à l'analyse.
     \vspace{0.3cm}
 
     \item \underline{\textbf{Ingénierie des caractéristiques (Feature Engineering) :}}    
     
     La classe \texttt{GenerateurFeatures} joue un rôle charnière. Elle transforme les données brutes en indicateurs statistiques (métriques de volume, de durée et temporelles). Ce processus permet de passer d'un simple enregistrement d'appel à un vecteur de données exploitable par l'intelligence artificielle.
     \vspace{0.3cm}
-
-    \item \underline{\textbf{Intelligence Artificielle et Polymorphisme :}} Le système utilise une classe abstraite \texttt{ModeleFraude} qui définit les méthodes génériques d'entraînement et de prédiction. Cette structure permet d'implémenter différentes approches algorithmiques, telles que \texttt{ModeleXGBoost} et \texttt{ModeleLightGBM}, garantissant ainsi la flexibilité et la possibilité de comparer les performances des modèles.
+\newpage
+    \item \underline{\textbf{Intelligence Artificielle et Polymorphisme:}}\\
+    Le système utilise une classe abstraite \texttt{ModeleFraude} qui définit les méthodes génériques d'entraînement et de prédiction. Cette structure permet d'implémenter différentes approches algorithmiques, telles que \texttt{ModeleXGBoost} et \texttt{ModeleLightGBM}, garantissant ainsi la flexibilité et la possibilité de comparer les performances des modèles.
     \vspace{0.3cm}
 
-    \item \underline{\textbf{Alerte et Amélioration Continue :}} Une fois le score de risque produit,
-    
-    le \texttt{SystemeAlerte} évalue si le seuil critique est dépassé pour notifier l'analyste. Enfin, la \texttt{BoucleFeedback} permet d'enregistrer les validations humaines, créant un cycle d'apprentissage continu pour réentraîner et affiner la précision des modèles futurs.
+    \item \underline{\textbf{Alerte et Amélioration Continue :}}\\
+    Une fois le score de risque produit,le \texttt{SystemeAlerte} évalue si le seuil critique est dépassé pour notifier l'analyste. Enfin, la \texttt{BoucleFeedback} permet d'enregistrer les validations humaines, créant un cycle d'apprentissage continu pour réentraîner et affiner la précision des modèles futurs.
 \end{itemize}
 
 
@@ -1091,8 +1157,6 @@ Le diagramme de classes présente l'architecture statique de la plateforme et il
 Les classes principales sont \textbf{User}, \textbf{CDR}, \textbf{FeatureMSISDN}, \textbf{ListeNoire}, \textbf{VerificationFraude} et \textbf{LoginHistory}.
 
 \section{MODÈLE DE DONNÉES}
-
-
 \subsection{Tables principales}
 \begin{table}[H]
 \centering
@@ -1111,7 +1175,6 @@ features\_msisdn\_v2 & 4,28 M lignes & Indicateurs calculés \\
 \hline
 liste\_noire\_fraude & 152 lignes & Suspects détectés \\
 \hline
-
 liste\_noire\_fresh & 210 lignes & Suspects sur le test \\
 \hline
 fraudes\_confirmées\_manuelle & Variable & Fraudes validées \\
@@ -1122,8 +1185,6 @@ login\_history & Variable & Historique connexions \\
 \hline
 \end{tabular}
 \end{table}
-
-
 \subsection{Description des features}
 \begin{table}[H]
 \centering
@@ -1170,9 +1231,7 @@ Détail & unique\_calling & Numéros entrants distincts \\
 \hline
 \end{tabular}
 \end{table}
-
 \section{ARCHITECTURE TECHNIQUE}
-
 \subsection{Architecture en trois couches}
 Notre systeme repose sur une architecture classique en trois couches :
 \begin{itemize}
@@ -1183,21 +1242,19 @@ Notre systeme repose sur une architecture classique en trois couches :
 
 \subsection{Architecture reseau particuliere}
 Une spécificité technique réside dans la séparation physique du système : le code Python s’exécute sur un environnement Linux WSL, tandis que la base de données PostgreSQL est hébergée sur l'hôte Windows. La communication entre ces deux entités s’effectue via le réseau local TCP/IP.
-
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{images/ChatGPT Image 13 mai 2026, 10_30_29.png}\vspace{3cm}
+\includegraphics[width=0.9\textwidth]{images/ChatGPT Image 13 mai 2026, 10_30_29.png}
 \caption{Architecture technique generale}
 \label{fig:archi-reseau}
 \end{figure}
-
 \section{CHOIX TECHNOLOGIQUES}
 
 \begin{table}[H]
 \centering
 \caption{Choix technologiques retenus}
 \label{tab:choix-tech}
-\vspace{0.5cm}
+
 \small
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{|l|l|p{5cm}|}
@@ -1282,7 +1339,7 @@ Trois rôles principaux structurent l'équipe Scrum :
 \end{itemize}
 
 \subsection{Rôles Scrum dans notre projet}
-Le tableau~\ref{tab:roles-scrum} présente la répartition des rôles Scrum dans notre projet.
+L'encadrant entreprise joue le rôle de \textbf{Product Owner} (il définit le besoin métier), l'encadrant académique celui de \textbf{Scrum Master} (il garantit la méthodologie), et l'étudiante constitue la \textbf{Scrum Team} chargée de la réalisation.
 
 \begin{table}[H]
 \centering
@@ -1294,16 +1351,15 @@ Le tableau~\ref{tab:roles-scrum} présente la répartition des rôles Scrum dans
 \hline
 \textbf{Rôle} & \textbf{Acteur} \\
 \hline
-Product Owner & M. Ithar Lounissi  \\
+Product Owner & M. Ithar Lounissi (Elite Business) \\
 \hline
-Scrum Master & M. Ridha Ejbali  \\
+Scrum Master & M. Ridha Ejbali (FSG) \\
 \hline
-Scrum Team & Samar Guizani  \\
+Scrum Team & Samar Guizani \\
 \hline
 \end{tabular}
 \end{table}
 
-\subsection{Product Backlog}
 \subsection{Product Backlog}
 Le Product Backlog regroupe l'ensemble des fonctionnalités à développer, exprimées sous forme de \textit{User Stories} et classées par ordre de priorité. Le tableau~\ref{tab:product-backlog} présente le Product Backlog de notre solution.
 
@@ -1354,11 +1410,11 @@ Le Product Backlog regroupe l'ensemble des fonctionnalités à développer, expr
 \subsection{Planification des sprints}
 Le projet a été découpé en plusieurs sprints, chacun couvrant un ensemble de User Stories. Le tableau~\ref{tab:sprints} présente la planification des sprints.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Planification des sprints}
 \label{tab:sprints}
-\vspace{0.3cm}
+
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{|c|p{5cm}|p{5cm}|}
 \hline
@@ -1518,8 +1574,6 @@ Cette règle a permis d'identifier \textbf{152 fraudes confirmées} qui ont serv
 
 \subsection{Division train/test}
 
-\subsection{Division train/test}
-
 Dans ce projet, le modèle est évalué de \textbf{deux manières distinctes} :
 
 \begin{itemize}
@@ -1593,11 +1647,9 @@ Sa partie supérieure présente une série de \textbf{cartes statistiques } mett
 Cette page joue ainsi un double rôle : elle informe l'utilisateur sur la santé globale du système de détection et l'oriente intuitivement vers les modules d'investigation accessibles depuis la barre latérale de navigation.
 \begin{figure}[H]
 \centering
+\includegraphics[width=0.9\textwidth]{images/dash.png}
 \caption{Page d'accueil du tableau de bord}
-
-\vspace{0.3cm}
 \label{fig:dashboard}
-\includegraphics[width=0.9\textwidth]{images/dash.png}\vspace{3cm}
 \end{figure}
 \subsection{Pages développées}
 \begin{table}[H]
@@ -1639,10 +1691,9 @@ La figure~\ref{fig:users} présente la page qui permet à l'administrateur de vi
 
 \begin{figure}[H]
 \centering
+\includegraphics[width=0.9\textwidth]{images/gestiondesusers.png}
 \caption{Page de gestion des utilisateurs}
 \label{fig:users}
-\vspace{3cm}
-\includegraphics[width=0.9\textwidth]{images/gestiondesusers.png}\vspace{3cm}
 \end{figure}
 
 \subsection{Page de la liste noire}
@@ -1650,11 +1701,9 @@ La figure~\ref{fig:liste-noire} montre la page qui affiche tous les numéros sus
 
 \begin{figure}[H]
 \centering
+\includegraphics[width=0.9\textwidth]{images/listenoire.png}
 \caption{Page de la liste noire}
 \label{fig:liste-noire}
-\vspace{3cm}
-\includegraphics[width=0.9\textwidth]{images/listenoire.png}\vspace{3cm}
-
 \end{figure}
 
 
@@ -1663,54 +1712,45 @@ La page \emph{IMEI des Suspects} regroupe l'analyse des identifiants matériels 
 
 \begin{figure}[H]
 \centering
+\includegraphics[width=0.9\textwidth]{images/imei.png}
 \caption{Page IMEI des suspects}
 \label{fig:imei}
-\vspace{3cm}
-\includegraphics[width=0.9\textwidth]{images/imei.png}\vspace{3cm}
 \end{figure}
 
 \subsection{Page de test sur données fraîches}
 La page \emph{Test Données Fresh} présente les résultats de la validation finale du système sur un lot de 6~Go de CDR neufs (mai 2026), jamais vus par le modèle pendant l'apprentissage. Elle affiche notamment la précision réelle obtenue (100~\%), la décomposition géographique des 210 fraudeurs détectés, ainsi que la liste complète des numéros suspectés avec leur probabilité prédite. La figure~\ref{fig:testfresh} illustre cette page.
-
 \begin{figure}[H]
 \centering
+\includegraphics[width=0.9\textwidth]{images/freshtrain.png}
 \caption{Page de test sur données fraîches}
 \label{fig:testfresh}
-\vspace{3cm}
-\includegraphics[width=0.9\textwidth]{images/freshtrain.png}\vspace{3cm}
 \end{figure}
-
 \subsection{Système d'authentification}
 Le module d'authentification propose un parcours complet : inscription avec saisie de l'email, envoi d'un code de vérification à six chiffres par email via Gmail SMTP, validation du code, connexion par email et mot de passe, ainsi qu'une procédure de récupération du mot de passe en cas d'oubli. La figure~\ref{fig:authentification} présente l'interface de connexion.
 
+% APRÈS (correct, sans espaces vides)
 \begin{figure}[H]
 \centering
+\includegraphics[width=0.9\textwidth]{images/authentificationpage.png}
 \caption{Page d'authentification}
 \label{fig:authentification}
-\vspace{3cm}
-\includegraphics[width=0.9\textwidth]{images/authentificationpage.png}\vspace{3cm}
 \end{figure}
 
-\newpage
 \subsection{Module Human-in-the-Loop}
 La page de vérification manuelle représente l'innovation principale de notre solution. Elle permet à l'administrateur de valider ou de rejeter les suspects détectés par le modèle, et d'enrichir progressivement la base d'apprentissage avec des fraudes confirmées à 100\%.
-
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
+\includegraphics[width=0.9\textwidth]{images/vrf.png}
 \caption{Page de vérification manuelle (Human-in-the-Loop)}
 \label{fig:verification}
-\vspace{3cm}
-\includegraphics[width=0.9\textwidth]{images/vrf.png}\vspace{3cm}
 \end{figure}
-
 \section{TESTS ET VALIDATION}
-
 \subsection{Tests fonctionnels}
 \begin{table}[H]
 \centering
 \caption{Tests fonctionnels}
 \label{tab:tests-fonctionnels}
-\vspace{0.3cm}
+
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{|l|c|}
 \hline
@@ -1723,6 +1763,7 @@ Connexion administrateur & Réussi \\
 Connexion analyste & Réussi \\
 \hline
 Prédiction sur un MSISDN & Réussi \\
+
 \hline
 Lancement évaluation ML & Réussi \\
 \hline
@@ -1742,7 +1783,7 @@ Filtrage de la liste noire & Réussi \\
 \centering
 \caption{Tests de performance}
 \label{tab:tests-perf}
-\vspace{0.3cm}
+
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{|l|l|}
 \hline
@@ -1802,7 +1843,54 @@ Durée d'import dans PostgreSQL & 2 h  \\
 Durée du Feature Engineering & 2 h 54 min \\
 \hline
 \end{tabular}
+
+\end{tabular}
 \end{table}
+
+\subsection{Test indépendant sur données fraîches}
+
+Afin de valider la robustesse du système au-delà du jeu d'entraînement,
+un test indépendant a été réalisé sur un nouveau lot de données fourni
+par l'entreprise : \textbf{6 gigaoctets de CDR compressés
+(environ 30 Go décompressés) couvrant la période du 8 au 12 mai 2026}.
+Ce mois étant postérieur à la période d'apprentissage, le modèle n'avait
+\textbf{jamais vu ces données}, ce qui en fait un véritable examen
+opérationnel.
+
+\subsubsection{Préparation du jeu de test}
+Les 6 Go ont été importés dans une table dédiée
+(\texttt{cdr\_data\_fresh}), totalement séparée du jeu d'entraînement
+afin de garantir l'absence de contamination. Le pipeline de
+\emph{Feature Engineering} a ensuite été ré-exécuté pour générer les
+16 indicateurs comportementaux dans la table
+\texttt{features\_msisdn\_fresh}.
+
+\begin{table}[H]
+\centering
+\caption{Volumétrie du jeu de test indépendant}
+\label{tab:fresh-volume}
+\vspace{0.3cm}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Élément} & \textbf{Valeur} \\
+\hline
+Période couverte & 8 -- 12 mai 2026 \\
+\hline
+Volume CDR (compressé / brut) & 6 Go / 30 Go \\
+\hline
+Nombre de lignes CDR importées & 213 695 147 \\
+\hline
+Nombre de numéros (MSISDN) analysés & 3 971 333 \\
+\hline
+Durée d'import dans PostgreSQL & 2 h  \\
+\hline
+Durée du Feature Engineering & 2 h 54 min \\
+\hline
+\end{tabular}
+\end{table}
+
+
 
 \subsubsection{Protocole d'évaluation}
 Le modèle XGBoost déjà entraîné a été appliqué aux 3 971 333 numéros
@@ -1925,7 +2013,7 @@ Couverture géographique & Une seule zone & Étendue à une nouvelle zone \\
 \item Expérimentation d'algorithmes de Deep Learning (LSTM).
 \item Application mobile pour les analystes de terrain.
 \end{enumerate}
-
+\newpage
 \section{CONCLUSION}
 Ce troisième chapitre a présenté la réalisation concrète de notre projet ainsi que les résultats obtenus. Le pipeline de Feature Engineering a permis de transformer un volume considérable de données brutes en une représentation compacte exploitable par le Machine Learning. Le modèle XGBoost atteint un F1-Score de 0,85 avec un Recall de 96\% sur le jeu d'entraînement. Surtout, le test indépendant mené sur 6 Go de données fraîches (mai 2026) a confirmé la robustesse de la solution avec une \textbf{précision de 100~\% (210 vrais fraudeurs sur 210 détectés)} et a permis de \textbf{découvrir une nouvelle zone de fraude} jusqu'alors non surveillée par l'entreprise. Le tableau de bord développé offre une expérience utilisateur moderne et intègre l'innovation principale du Human-in-the-Loop, permettant un cycle d'amélioration continue de la détection.
 
@@ -1947,7 +2035,7 @@ Sur le plan algorithmique, le modele XGBoost entraine atteint des performances s
 Sur le plan logiciel, le tableau de bord web developpe se distingue par son interface moderne, son systeme d'authentification securise et l'innovation que constitue le module Human-in-the-Loop, qui permettra l'amelioration continue du modele.
 
 Au-dela des aspects techniques, ce stage a represente pour nous une experience humaine et professionnelle particulierement enrichissante. Nous avons appris a travailler dans un environnement reel d'entreprise et a gerer un projet de bout en bout.
-\newpage
+
 Plusieurs perspectives se dessinent pour la poursuite du projet : re-entrainement regulier avec fraudes confirmees, integration des tables internes, migration vers une architecture de streaming temps reel et experimentation d'algorithmes de Deep Learning.
 
 En conclusion, ce projet nous a permis de produire une solution operationnelle qui repond aux besoins exprimes par l'entreprise tout en posant les bases d'evolutions futures ambitieuses.
@@ -2006,28 +2094,94 @@ Le fichier complet \texttt{feature\_engineering\_v2.sql} est disponible dans le 
 % ============================================================
 % DOS DU RAPPORT (11-DosDuRapport.tex)
 % ============================================================
-\newpage % Force le passage à la page suivante pour le résumé
+\newpage
 \thispagestyle{empty}
+\newgeometry{top=1.5cm, bottom=1.5cm, left=2cm, right=2cm}
 
 \begin{center}
-    \textbf{DÉTECTION DE FRAUDE SIM BOX PAR MACHINE LEARNING}\\[0.5em]
-    \rule{8cm}{2pt}\\[0.5em]
-    \textbf{Samar GUIZANI}\\
-    \rule{8cm}{2pt}
+
+    % ==========================================
+    % TITRE EN HAUT
+    % ==========================================
+    {\fontsize{13pt}{16pt}\selectfont \textbf{\color{blue} Approche hybride : Règles-Intelligence Artificielle pour la détection de la fraude Sim Box bypass à partir des CDR dans les réseaux de télécommunications }} \\[0.4cm]
+
+    % Première double ligne mauve (courte)
+    \noindent\makebox[\textwidth]{%
+        \color{mauveFSG}%
+        \vbox{
+            \hrule width 0.55\textwidth height 0.5pt
+            \vbox to 3pt{}
+            \hrule width 0.55\textwidth height 2.5pt
+            \vbox to 3pt{}
+            \hrule width 0.55\textwidth height 0.5pt
+        }%
+    } \\[0.3cm]
+
+    % Noms des auteurs
+    {\fontsize{12pt}{15pt}\selectfont \textbf{\color{blue} Samar Guizani}} \\[0.3cm]
+
+    % Deuxième double ligne mauve (courte)
+    \noindent\makebox[\textwidth]{%
+        \color{mauveFSG}%
+        \vbox{
+            \hrule width 0.45\textwidth height 0.5pt
+            \vbox to 3pt{}
+            \hrule width 0.45\textwidth height 2.5pt
+            \vbox to 3pt{}
+            \hrule width 0.45\textwidth height 0.5pt
+        }%
+    } \\[0.8cm]
+
 \end{center}
 
-\vspace{1cm}
+% ============================================================
+% SECTION ARABE COMPATIBLE PDFLATEX (خلاصة + الكلمات المفتاحية)
+% ============================================================
+\begin{otherlanguage}{arabic}
+\vspace{-0.2cm}
 
-\textbf{Résumé :} Ce projet de fin d'études vise la conception et la réalisation d'un système intelligent de détection de fraude SIM Box dans les télécommunications. L'approche retenue combine les règles métier de l'entreprise avec des algorithmes de Machine Learning (XGBoost et Isolation Forest), le tout déployé dans un tableau de bord web professionnel avec authentification, gestion des rôles et validation humaine. L'application a été validée sur un jeu de données de 741 millions d'enregistrements CDR (83 Go), après une phase de Feature Engineering qui a produit 16 indicateurs comportementaux par numéro. Le modèle XGBoost atteint un F1-Score de 0,85 avec un Recall de 96\% sur le jeu de test. L'innovation principale du projet réside dans l'intégration d'un module Human-in-the-Loop permettant l'amélioration continue du modèle.
+% Titre du Résumé aligné à droite nativement
+\noindent{\fontsize{13pt}{15pt}\selectfont
+\underline{\textit{\textbf{\color{blue}الملخص:}}}}
+% Corps du texte
+{\fontsize{10.5pt}{14pt}\selectfont
+يهدف مشروع تخرجنا هذا إلى تصميم وتطوير نظام ذكي للكشف عن الاحتيال عبر أجهزة الـ Box SIM في قطاع الاتصالات. وتعتمد المقاربة المعتمدة على الجمع بين قواعد العمل الخاصة بالمؤسسة وخوارزميات تعلم الآلة Learning Machine  مثل XGBoost وIsolation Forest حيث تم دمجها بالكامل في لوحة تحكم ويب احترافية تدعم نظام المصادقة، وإدارة الصلاحيات، والتحقق البشري. تم التحقق من كفاءة التطبيق واختباره على قاعدة بيانات ضخمة تحتوي على 741 مليون سجل من تفاصيل المكالمات (CDR) بحجم إجمالي يبلغ 83 جيجابايت، وذلك بعد مرحلة هندسة الميزات التي أسفرت عن استخراج 16 مؤشرًا سلوكيًا لكل رقم هاتف. وقد حقق نموذج (XGBoost) مقياس دقة (F1-Score) قدره 0.85 مع نسبة استدعاء (Recall) تصل إلى 96\% على مجموعة بيانات الاختبار. ويكمن الابتكار الرئيسي لهذا المشروع في إدراج وحدة تفاعل "العنصر البشري في المسار" (Human-in-the-Loop)، مما يتيح التطوير والتحسين المستمر للنموذج.
+}
 
-\vspace{0.8cm}
-\textbf{Mots clés :} fraude SIM Box, télécommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
+\vspace{0.4cm}
 
-\vspace{1.5cm} % Espace entre le français et l'anglais
+% Mots-clés alignés à droite nativement
+\noindent{\fontsize{10.5pt}{13pt}\selectfont
+\underline{\textit{\textbf{\color{blue}الكلمات المفتاحية:}}}} الاحتيال عبر أجهزة الـ Box SIM  الاتصالات، تعلم الآلة , Learning Machine  XGBoost، البيانات الضخمة Data big ,  Flask ,  PostgreSQL.
 
-\textbf{Abstract :} This graduation project aims at designing and implementing an intelligent SIM Box fraud detection system for telecommunications. The proposed approach combines business rules with Machine Learning algorithms (XGBoost and Isolation Forest), deployed within a professional web dashboard featuring authentication, role-based access control and human validation. The system has been validated on a dataset of 741 million CDR records (83 GB), after a Feature Engineering phase that produced 16 behavioral indicators per number. The XGBoost model reaches an F1-Score of 0.85 with a Recall of 96\% on the test set. The main innovation lies in the Human-in-the-Loop module, which enables continuous improvement of the model through analyst validations.
+\end{otherlanguage}
 
-\vspace{0.3cm}
-\textbf{Key-words :} SIM Box fraud, telecommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
+% ==========================================
+% RÉSUMÉ FRANÇAIS
+% ==========================================
+\noindent \underline{\textit{\textbf{\color{blue}Résumé :}}} Ce projet de fin d'études vise la conception et la réalisation d'un système intelligent de détection de fraude SIM Box dans les télécommunications. L'approche retenue combine les règles métier de l'entreprise avec des algorithmes de Machine Learning (XGBoost et Isolation Forest), le tout déployé dans un tableau de bord web professionnel avec authentification, gestion des rôles et validation humaine. L'application a été validée sur un jeu de données de 741 millions d'enregistrements CDR (83 Go), après une phase de Feature Engineering qui a produit 16 indicateurs comportementaux par numéro. Le modèle XGBoost atteint un F1-Score de 0,85 avec un Recall de 96\% sur le jeu de test. L'innovation principale du projet réside dans l'intégration d'un module Human-in-the-Loop permettant l'amélioration continue du modèle.
 
+\vspace{0.5cm}
+
+% ==========================================
+% MOTS CLÉS FRANÇAIS
+% ==========================================
+\noindent \underline{\textit{\textbf{\color{blue}Mots clés :}}} fraude SIM Box, télécommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
+
+\vspace{0.5cm}
+
+% ==========================================
+% ABSTRACT ANGLAIS
+% ==========================================
+\noindent \underline{\textit{\textbf{\color{blue}Abstract:}}} This graduation project aims at designing and implementing an intelligent SIM Box fraud detection system for telecommunications. The proposed approach combines business rules with Machine Learning algorithms (XGBoost and Isolation Forest), deployed within a professional web dashboard featuring authentication, role-based access control and human validation. The system has been validated on a dataset of 741 million CDR records (83 GB), after a Feature Engineering phase that produced 16 behavioral indicators per number. The XGBoost model reaches an F1-Score of 0.85 with a Recall of 96\% on the test set. The main innovation lies in the Human-in-the-Loop module, which enables continuous improvement of the model through analyst validations.
+
+\vspace{0.5cm}
+
+% ==========================================
+% KEY-WORDS ANGLAIS
+% ==========================================
+\noindent \underline{\textit{\textbf{\color{blue}Key-words:}}} SIM Box fraud, telecommunications, Machine Learning, XGBoost, Big Data, Flask, PostgreSQL.
+
+\restoregeometry
+\let\clearpage\relax
 \end{document}

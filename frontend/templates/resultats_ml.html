@@ -294,7 +294,7 @@ const testPerPage = 15;
 async function loadTestSuspects(page) {
     testCurrentPage = page;
     const search = document.getElementById("search-test").value;
-    const res = await fetch(`/api/suspects-test?page=${page}&per_page=${testPerPage}&search=${search}`);
+    const res = await fetch(`/api/suspects-test?page=${page}&per_page=${testPerPage}&search=${encodeURIComponent(search)}`);
     const data = await res.json();
 
     const tbody = document.getElementById("test-suspects-body");

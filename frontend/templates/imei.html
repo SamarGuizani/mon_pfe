@@ -173,7 +173,7 @@ let imeiCurrentPage = 1;
 async function loadImei(page) {
     imeiCurrentPage = page;
     const search = document.getElementById("search-imei").value;
-    const r = await fetch(`/api/imei-tous?page=${page}&per_page=20&search=${search}`);
+    const r = await fetch(`/api/imei-tous?page=${page}&per_page=20&search=${encodeURIComponent(search)}`);
     const d = await r.json();
     const tbody = document.getElementById("imei-body");
     tbody.innerHTML = "";

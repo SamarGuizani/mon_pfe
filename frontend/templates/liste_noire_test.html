@@ -102,7 +102,7 @@ async function loadMetrics() {
 async function loadSuspects(page) {
     currentPage = page;
     const search = document.getElementById("search-input").value;
-    const res = await fetch(`/api/suspects-test?page=${page}&per_page=${perPage}&search=${search}`);
+    const res = await fetch(`/api/suspects-test?page=${page}&per_page=${perPage}&search=${encodeURIComponent(search)}`);
     const data = await res.json();
 
     document.getElementById("badge-total").textContent = fmt(data.total);

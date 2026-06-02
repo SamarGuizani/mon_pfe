@@ -111,7 +111,7 @@ async function loadVerifStats() {
 async function loadSuspects(page) {
     currentPage = page;
     const search = document.getElementById("search-input").value;
-    const res = await fetch(`/api/suspects?page=${page}&per_page=${perPage}&search=${search}&filter=${currentFilter}`);
+    const res = await fetch(`/api/suspects?page=${page}&per_page=${perPage}&search=${encodeURIComponent(search)}&filter=${currentFilter}`);
     const data = await res.json();
 
     document.getElementById("badge-total").textContent = fmt(data.total);

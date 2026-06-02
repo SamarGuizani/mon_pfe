@@ -267,7 +267,7 @@ const freshPerPage = 15;
 async function loadFreshSuspects(page) {
     freshCurrentPage = page;
     const search = document.getElementById("search-fresh").value;
-    const res = await fetch(`/api/suspects-fresh?page=${page}&per_page=${freshPerPage}&search=${search}`);
+    const res = await fetch(`/api/suspects-fresh?page=${page}&per_page=${freshPerPage}&search=${encodeURIComponent(search)}`);
     const data = await res.json();
 
     const tbody = document.getElementById("fresh-suspects-body");
