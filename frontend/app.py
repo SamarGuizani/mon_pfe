@@ -33,8 +33,8 @@ login_manager.login_view = "page_login"
 
 # Charger le modele XGBoost au demarrage
 # V2 = modele retenu : prouve sur les donnees fresh (F1 = 0.998 sur un mois neuf)
-print("  Chargement du modele XGBoost V2...")
-model_xgb = joblib.load("../models/xgboost_fraud_v2.pkl")
+print("  Chargement du modele XGBoost V3...")
+model_xgb = joblib.load("../models/xgboost_fraud_v3.pkl")
 
 FEATURES = [
     "appels_sortants", "appels_entrants",
