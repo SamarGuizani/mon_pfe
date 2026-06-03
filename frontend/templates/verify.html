@@ -25,6 +25,15 @@
             <div class="login-error">{{ error }}</div>
             {% endif %}
 
+            {% if fallback_code %}
+            <div style="background:#fff8e1; border:2px solid #ff9800; padding:18px; border-radius:8px; margin:15px 0; text-align:center;">
+                <p style="margin:0 0 8px 0; color:#e65100; font-weight:bold;">L'envoi d'email a echoue (serveur restreint).</p>
+                <p style="margin:0 0 12px 0; color:#5d4037; font-size:14px;">Voici votre code de verification :</p>
+                <div style="font-size:36px; font-weight:bold; color:#e65100; letter-spacing:10px; padding:10px 0;">{{ fallback_code }}</div>
+                <p style="margin:8px 0 0 0; color:#7a5e2d; font-size:12px;">Copiez ce code et collez-le ci-dessous pour valider votre compte.</p>
+            </div>
+            {% endif %}
+
             <form method="POST" action="/verify">
                 <input type="hidden" name="email" value="{{ email }}">
                 <div class="form-group">

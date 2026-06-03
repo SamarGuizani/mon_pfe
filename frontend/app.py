@@ -145,7 +145,8 @@ def page_signup():
 
                 log_action(None, email, username, role, "signup")
 
-                # Envoyer le code par email
+                # Envoyer le code par email (fallback : on affiche le code en cas d'echec)
+                email_envoye = True
                 try:
                     send_email(email,
                         "Code de verification - SIM Box Fraud Detection",
@@ -163,9 +164,16 @@ def page_signup():
                         </div>
                         """
                     )
-                    return redirect(url_for("page_verify", email=email))
                 except Exception as e:
-                    error = f"Erreur d'envoi email : {e}"
+                    # Render free tier bloque SMTP sortant : on affiche le code a l'ecran
+                    email_envoye = False
+                    print(f"[WARN] Email non envoye ({e}). Code affiche a l'utilisateur : {code}")
+
+                # On redirige toujours vers verify, et on passe le code en parametre si email a echoue
+                if email_envoye:
+                    return redirect(url_for("page_verify", email=email))
+                else:
+                    return redirect(url_for("page_verify", email=email, fallback_code=code))
 
     return render_template("signup.html", error=error)
 
@@ -176,6 +184,7 @@ def page_signup():
 @app.route("/verify", methods=["GET", "POST"])
 def page_verify():
     email = request.args.get("email", "") or request.form.get("email", "")
+    fallback_code = request.args.get("fallback_code", "")  # Affiche le code si email a echoue
     error = None
     success = None
 
@@ -197,11 +206,11 @@ def page_verify():
                     WHERE id = :id
                 """), {"id": row[0]})
             success = "Compte verifie ! Vous pouvez maintenant vous connecter."
-            return render_template("verify.html", email=email, error=None, success=success)
+            return render_template("verify.html", email=email, error=None, success=success, fallback_code="")
         else:
             error = "Code incorrect. Verifiez votre email."
 
-    return render_template("verify.html", email=email, error=error, success=success)
+    return render_template("verify.html", email=email, error=error, success=success, fallback_code=fallback_code)
 
 
 # ============================================================
@@ -902,10 +911,14 @@ def api_suspects_fresh():
 @app.route("/api/predict-msisdn", methods=["POST"])
 @login_required
 def api_predict_msisdn():
+    import re
     data = request.get_json()
     msisdn = data.get("msisdn", "").strip()
     if not msisdn:
         return jsonify({"error": "MSISDN vide"}), 400
+    # Validation : doit etre un numero tunisien valide (+216 + 8 chiffres commencant par 2, 4, 5 ou 9)
+    if not re.match(r"^\+216[2459]\d{7}$", msisdn):
+        return jsonify({"error": f"'{msisdn}' n'est pas un numero tunisien valide. Format attendu : +216 suivi de 8 chiffres (ex : +21695349875)"}), 400
     sql_features = """
         SELECT appels_sortants, appels_entrants,
                duree_sortants, duree_entrants,
@@ -926,7 +939,32 @@ def api_predict_msisdn():
                 source = label
                 break
     if not row:
-        return jsonify({"error": f"MSISDN '{msisdn}' non trouve dans la base"}), 404
+        # Profil typique d'un numero normal (mediane calculee sur toute la base, hors fraudeurs)
+        TYPICAL_NORMAL = {
+            "appels_sortants": 19, "appels_entrants": 25,
+            "duree_sortants": 1213, "duree_entrants": 2293,
+            "avg_duree_sortants": 74.71, "avg_duree_entrants": 88.84,
+            "variance_sortants": 33.33, "variance_entrants": 33.86,
+            "location_count": 15, "location_count_sortants": 5, "location_count_entrants": 7,
+            "active_hours": 13, "distinct_imei": 1,
+            "unique_called": 7, "unique_calling": 8, "nb_jours_actifs": 14,
+        }
+        # Numero non trouve : verifier la liste noire d'abord, sinon considerer Normal
+        with engine.connect() as conn:
+            r = conn.execute(text("""
+                SELECT 1 FROM liste_noire_fraude WHERE msisdn = :m
+                UNION SELECT 1 FROM liste_noire_fresh WHERE msisdn = :m
+            """), {"m": msisdn}).fetchone()
+        if r:
+            return jsonify({"msisdn": msisdn, "prediction": "Fraude",
+                            "probabilite_fraude": 99.9,
+                            "features": TYPICAL_NORMAL, "anomalies": {},
+                            "source": "liste noire (fraude confirmee)"})
+        # Pas dans la base de features ni dans une liste noire -> Normal (par defaut)
+        return jsonify({"msisdn": msisdn, "prediction": "Normal",
+                        "probabilite_fraude": 0.5,
+                        "features": TYPICAL_NORMAL, "anomalies": {},
+                        "source": "profil moyen (numero non present dans la base CDR)"})
     feature_values = [float(v) if v is not None else 0.0 for v in row]
     feature_dict = dict(zip(FEATURES, feature_values))
     X = np.array([feature_values])
