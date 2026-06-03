@@ -51,14 +51,14 @@ FEATURES = [
 # ENVOI D'EMAIL
 # ============================================================
 def send_email(to_email, subject, body_html):
-    """Envoie un email via Gmail SMTP"""
+    """Envoie un email via Gmail SMTP avec timeout (evite que Render hang)"""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"SIM Box Fraud Detection <{MAIL_USERNAME}>"
     msg["To"] = to_email
     msg.attach(MIMEText(body_html, "html"))
 
-    with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server:
+    with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=15) as server:
         server.starttls()
         server.login(MAIL_USERNAME, MAIL_PASSWORD)
         server.sendmail(MAIL_USERNAME, to_email, msg.as_string())
