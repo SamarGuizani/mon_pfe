@@ -652,9 +652,15 @@ def api_change_role():
 @app.route("/api/stats")
 @login_required
 def api_stats():
+    # Valeur reelle de la grande base CDR (entrainement original sur 741M lignes)
+    # On garde cette valeur fixe car en prod la base Neon est un echantillon
+    TOTAL_MSISDN_PROD = 4_282_822
+
     with engine.connect() as conn:
         r = conn.execute(text("SELECT COUNT(*) FROM features_msisdn_v2"))
-        total_msisdn = r.fetchone()[0]
+        total_msisdn_sample = r.fetchone()[0]
+        # Si on est sur l'echantillon Neon (< 1M) on affiche la vraie valeur prod
+        total_msisdn = TOTAL_MSISDN_PROD if total_msisdn_sample < 1_000_000 else total_msisdn_sample
         r = conn.execute(text("SELECT COUNT(*) FROM liste_noire_fraude"))
         total_suspects = r.fetchone()[0]
         r = conn.execute(text("""
